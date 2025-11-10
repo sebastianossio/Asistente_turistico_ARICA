@@ -5,10 +5,9 @@ import os
 # Configura tu API Key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-import streamlit as st
 import pandas as pd
 import folium
-from folium import Popup, PolyLine
+from folium import PolyLine
 from geopy.distance import geodesic
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.pagesizes import letter
@@ -23,8 +22,6 @@ import openai
 import os
 
 # --- Configurar API Key de OpenAI ---
-# Debes poner tu API Key como variable de entorno:
-# export OPENAI_API_KEY="TU_API_KEY"
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # --- Traductor ---
@@ -48,11 +45,14 @@ atractivos = [
     {"nombre": "Humedal del Río Lluta", "lat": -18.4395, "lon": -70.3170, "zona": "Arica", "tipo": "naturaleza", "tiempo": 1.5,
      "descripcion": "Santuario de aves migratorias con senderos y miradores naturales.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Humedal_del_R%C3%ADo_Lluta_-_Arica.jpg"},
+    {"nombre": "Valle de Azapa", "lat": -18.481, "lon": -70.308, "zona": "Arica", "tipo": "naturaleza", "tiempo": 2,
+     "descripcion": "Famoso valle de olivos y cultura agrícola.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Valle_de_Azapa.jpg"},
     {"nombre": "Putre", "lat": -18.1977, "lon": -69.5593, "zona": "Altiplano", "tipo": "pueblo", "tiempo": 3,
      "descripcion": "Encantador pueblo altiplánico y base para visitar el Parque Lauca.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Putre_-_Chile.jpg"},
     {"nombre": "Parque Nacional Lauca", "lat": -18.2333, "lon": -69.1667, "zona": "Altiplano", "tipo": "naturaleza",
-     "tiempo": 4, "descripcion": "Paisaje de altura con lagos, volcanes y fauna andina.",
+     "tiempo": 4, "descripcion": "Paisajes de altura con lagos y volcanes.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Lago_Chungara_y_volcan_Parinacota.jpg"},
     {"nombre": "Termas de Jurasi", "lat": -18.2255, "lon": -69.5250, "zona": "Altiplano", "tipo": "relajo", "tiempo": 2,
      "descripcion": "Piscinas naturales de aguas termales cerca de Putre.",
@@ -62,7 +62,13 @@ atractivos = [
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Socoroma_Arica_y_Parinacota.jpg"},
     {"nombre": "Cuevas de Anzota", "lat": -18.5358, "lon": -70.3511, "zona": "Arica", "tipo": "naturaleza", "tiempo": 1.5,
      "descripcion": "Formaciones rocosas y miradores junto al mar.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Cuevas_de_Anzota_-_Arica.jpg"}
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Cuevas_de_Anzota_-_Arica.jpg"},
+    {"nombre": "Salar de Surire", "lat": -19.366, "lon": -69.383, "zona": "Altiplano", "tipo": "naturaleza", "tiempo": 3,
+     "descripcion": "Salar con flamencos y geografía única.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/5/57/Salar_de_Surire.jpg"},
+    {"nombre": "Camarones", "lat": -18.200, "lon": -70.500, "zona": "Costas", "tipo": "pueblo", "tiempo": 2,
+     "descripcion": "Pueblo costero tradicional, conocido por su gastronomía.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Camarones_Arica.jpg"}
 ]
 
 # --- Funciones auxiliares ---
@@ -117,19 +123,17 @@ def generar_pdf(itinerario, idioma="es"):
     buffer.seek(0)
     return buffer
 
-# --- Chatbot con memoria y OpenAI ---
+# --- Chatbot con OpenAI ---
 if "memoria" not in st.session_state: st.session_state.memoria = {"preferencias": set()}
 if "chat_hist" not in st.session_state: st.session_state.chat_hist = []
 
 def responder_chat_openai(pregunta):
     memoria = st.session_state.memoria
-    # Guardar preferencias simples
     p = pregunta.lower()
     if "playa" in p: memoria["preferencias"].add("playa")
     if "naturaleza" in p or "paisaje" in p: memoria["preferencias"].add("naturaleza")
     if "historia" in p or "cultura" in p or "museo" in p: memoria["preferencias"].add("cultura")
     if "pueblo" in p: memoria["preferencias"].add("pueblo")
-    # Respuesta con OpenAI
     try:
         respuesta = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -142,8 +146,8 @@ def responder_chat_openai(pregunta):
 
 # --- Interfaz Streamlit ---
 st.set_page_config(page_title="Asistente Turístico Arica y Parinacota", layout="wide")
-st.title("🏔️ Asistente Turístico Final - Rutas Optimizadas con Chat GPT")
-st.markdown("Planifica tu viaje, genera itinerarios optimizados, chat inteligente con OpenAI, traducción automática, mapas y PDF 📱✉️")
+st.title("🏔️ Asistente Turístico Final")
+st.markdown("Planifica tu viaje, genera itinerarios optimizados, chat con OpenAI, mapas y PDF 📱✉️")
 
 # --- Chat ---
 st.sidebar.header("💬 Chat con tu Asistente")
@@ -163,17 +167,18 @@ dias = st.number_input("Cantidad de días de visita", min_value=1, max_value=10,
 st.subheader("Atractivos Turísticos")
 seleccionados = []
 cols = st.columns(2)
-for i,a in enumerate(atractivos):
-    with cols[i%2]:
+for i, a in enumerate(atractivos):
+    with cols[i % 2]:
         st.image(a["imagen"], caption=a["nombre"], use_container_width=True)
-        if st.checkbox(f"Seleccionar: {a['nombre']}"): seleccionados.append(a)
+        if st.checkbox(f"Seleccionar: {a['nombre']}"):
+            seleccionados.append(a)
 
 if st.button("Generar Itinerario Optimizado"):
     if not seleccionados: st.warning("Selecciona al menos un destino.")
     else:
         itinerario = generar_itinerario_optimizado(seleccionados,dias)
         df = pd.DataFrame(itinerario)
-        st.success("✅ Itinerario generado con rutas optimizadas")
+        st.success("✅ Itinerario generado")
         st.dataframe(df)
 
         mapa = folium.Map(location=[-18.48, -70.32], zoom_start=8)
@@ -186,7 +191,7 @@ if st.button("Generar Itinerario Optimizado"):
         if len(line_coords)>1: PolyLine(line_coords,color="blue",weight=3).add_to(mapa)
         st.components.v1.html(mapa._repr_html_(), height=500)
 
-        # PDF español e inglés
+        # PDF
         pdf_buffer_es = generar_pdf(itinerario, idioma="es")
         pdf_buffer_en = generar_pdf(itinerario, idioma="en")
         st.download_button("📄 Descargar PDF en Español", pdf_buffer_es, "itinerario_arica.pdf")
@@ -202,4 +207,6 @@ if st.button("Generar Itinerario Optimizado"):
         body = urllib.parse.quote(resumen)
         mail_link = f"mailto:?subject={subject}&body={body}"
         st.markdown(f"[✉️ Compartir por Email]({mail_link})")
+
+
 
