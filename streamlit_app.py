@@ -17,16 +17,54 @@ from io import BytesIO
 import requests
 from PIL import Image as PILImage
 import openai
-import json
 import re
-with open("atractivos.json", "r", encoding="utf-8") as f:
-    atractivos = json.load(f)
+
 # --- Configuración OpenAI ---
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# --- Leer atractivos desde JSON ---
-with open("atractivos.json","r",encoding="utf-8") as f:
-    atractivos = json.load(f)
+# --- Lista de atractivos integrada correctamente ---
+atractivos = [
+    {
+        "nombre": "Playa Chinchorro",
+        "lat": -18.4726,
+        "lon": -70.3128,
+        "tiempo": 2,
+        "descripcion": "Amplia playa urbana ideal para nadar y disfrutar del sol.",
+        "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/1/11/Playa_Chinchorro_Arica_2020.jpg"
+    },
+    {
+        "nombre": "Playa El Laucho",
+        "lat": -18.4872,
+        "lon": -70.3232,
+        "tiempo": 1.5,
+        "descripcion": "Playa céntrica de aguas calmadas, ideal para familias.",
+        "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Playa_El_Laucho_Arica.jpg"
+    },
+    {
+        "nombre": "Humedal del Río Lluta",
+        "lat": -18.4395,
+        "lon": -70.3170,
+        "tiempo": 1.5,
+        "descripcion": "Santuario de aves migratorias con senderos y miradores naturales.",
+        "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Humedal_del_R%C3%ADo_Lluta_-_Arica.jpg"
+    },
+    {
+        "nombre": "Morro de Arica",
+        "lat": -18.4806,
+        "lon": -70.3273,
+        "tiempo": 2,
+        "descripcion": "Histórico morro con museo y mirador panorámico.",
+        "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Morro_de_Arica.jpg"
+    },
+    {
+        "nombre": "Museo de Sitio Colón 10",
+        "lat": -18.4770,
+        "lon": -70.3183,
+        "tiempo": 1.5,
+        "descripcion": "Museo con las momias más antiguas del mundo, cultura Chinchorro.",
+        "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Museo_de_Sitio_Col%C3%B3n_10_-_Arica.jpg"
+    }
+]
 
 # --- Funciones ---
 def distancia(a,b):
@@ -155,5 +193,4 @@ if st.button("Responder"):
                     st.image(img_pil,width=300)
                 except:
                     pass
-
 
