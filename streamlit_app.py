@@ -25,48 +25,118 @@ openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # --- Datos de atractivos turísticos ---
 atractivos = [
-    {"nombre": "Playa Chinchorro", "lat": -18.4726, "lon": -70.3128, "tiempo": 2,
-     "descripcion": "Amplia playa urbana ideal para nadar y disfrutar del sol.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/1/11/Playa_Chinchorro_Arica_2020.jpg"},
-    {"nombre": "Playa El Laucho", "lat": -18.4872, "lon": -70.3232, "tiempo": 1.5,
-     "descripcion": "Playa céntrica de aguas calmadas, ideal para familias.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Playa_El_Laucho_Arica.jpg"},
-    {"nombre": "Morro de Arica", "lat": -18.4806, "lon": -70.3273, "tiempo": 2,
-     "descripcion": "Histórico morro con museo y mirador panorámico.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Morro_de_Arica.jpg"},
-    {"nombre": "Museo de Sitio Colón 10", "lat": -18.4770, "lon": -70.3183, "tiempo": 1.5,
-     "descripcion": "Museo con las momias más antiguas del mundo, cultura Chinchorro.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Museo_de_Sitio_Col%C3%B3n_10_-_Arica.jpg"},
-    {"nombre": "Humedal del Río Lluta", "lat": -18.4395, "lon": -70.3170, "tiempo": 1.5,
-     "descripcion": "Santuario de aves migratorias con senderos y miradores naturales.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Humedal_del_R%C3%ADo_Lluta_-_Arica.jpg"},
-    {"nombre": "Valle de Azapa", "lat": -18.481, "lon": -70.308, "tiempo": 2,
-     "descripcion": "Famoso valle de olivos y cultura agrícola.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Valle_de_Azapa.jpg"},
-    {"nombre": "Putre", "lat": -18.1977, "lon": -69.5593, "tiempo": 3,
-     "descripcion": "Encantador pueblo altiplánico y base para visitar el Parque Lauca.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Putre_-_Chile.jpg"},
-    {"nombre": "Parque Nacional Lauca", "lat": -18.2333, "lon": -69.1667, "tiempo": 4,
-     "descripcion": "Paisajes de altura con lagos y volcanes.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Lago_Chungara_y_volcan_Parinacota.jpg"},
-    {"nombre": "Termas de Jurasi", "lat": -18.2255, "lon": -69.5250, "tiempo": 2,
-     "descripcion": "Piscinas naturales de aguas termales cerca de Putre.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/5/57/Termas_de_Jurasi_Putre.jpg"},
-    {"nombre": "Socoroma", "lat": -18.2242, "lon": -69.5870, "tiempo": 2,
-     "descripcion": "Pintoresco pueblo precordillerano con arquitectura tradicional.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Socoroma_Arica_y_Parinacota.jpg"},
-    {"nombre": "Cuevas de Anzota", "lat": -18.5358, "lon": -70.3511, "tiempo": 1.5,
-     "descripcion": "Formaciones rocosas y miradores junto al mar.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Cuevas_de_Anzota_-_Arica.jpg"},
-    {"nombre": "Salar de Surire", "lat": -19.366, "lon": -69.383, "tiempo": 3,
-     "descripcion": "Salar con flamencos y geografía única.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/5/57/Salar_de_Surire.jpg"},
-    {"nombre": "Camarones", "lat": -18.200, "lon": -70.500, "tiempo": 2,
-     "descripcion": "Pueblo costero tradicional, conocido por su gastronomía.",
-     "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Camarones_Arica.jpg"},
-    {"nombre": "Geoglifos de Lluta", "lat": -18.2, "lon": -70.3, "tiempo": 1.5,
-     "descripcion": "Antiguos geoglifos prehispánicos visibles desde miradores.",
-     "imagen_url": "https://images.visitchile.com/destinos/283_6702_la_ruta_altiplanca.jpg"}
+    {
+        "nombre": "Playa Chinchorro",
+        "lat": -18.4726,
+        "lon": -70.3128,
+        "tiempo": 2,
+        "descripcion": """Amplia playa urbana ideal para nadar y disfrutar del sol.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/1/11/Playa_Chinchorro_Arica_2020.jpg"""
+    },
+    {
+        "nombre": "Playa El Laucho",
+        "lat": -18.4872,
+        "lon": -70.3232,
+        "tiempo": 1.5,
+        "descripcion": """Playa céntrica de aguas calmadas, ideal para familias.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/3/3f/Playa_El_Laucho_Arica.jpg"""
+    },
+    {
+        "nombre": "Morro de Arica",
+        "lat": -18.4806,
+        "lon": -70.3273,
+        "tiempo": 2,
+        "descripcion": """Histórico morro con museo y mirador panorámico.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/8/8d/Morro_de_Arica.jpg"""
+    },
+    {
+        "nombre": "Museo de Sitio Colón 10",
+        "lat": -18.4770,
+        "lon": -70.3183,
+        "tiempo": 1.5,
+        "descripcion": """Museo con las momias más antiguas del mundo, cultura Chinchorro.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/f/f3/Museo_de_Sitio_Col%C3%B3n_10_-_Arica.jpg"""
+    },
+    {
+        "nombre": "Humedal del Río Lluta",
+        "lat": -18.4395,
+        "lon": -70.3170,
+        "tiempo": 1.5,
+        "descripcion": """Santuario de aves migratorias con senderos y miradores naturales.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/b/bd/Humedal_del_R%C3%ADo_Lluta_-_Arica.jpg"""
+    },
+    {
+        "nombre": "Valle de Azapa",
+        "lat": -18.481,
+        "lon": -70.308,
+        "tiempo": 2,
+        "descripcion": """Famoso valle de olivos y cultura agrícola.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/3/3d/Valle_de_Azapa.jpg"""
+    },
+    {
+        "nombre": "Putre",
+        "lat": -18.1977,
+        "lon": -69.5593,
+        "tiempo": 3,
+        "descripcion": """Encantador pueblo altiplánico y base para visitar el Parque Lauca.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/7/7e/Putre_-_Chile.jpg"""
+    },
+    {
+        "nombre": "Parque Nacional Lauca",
+        "lat": -18.2333,
+        "lon": -69.1667,
+        "tiempo": 4,
+        "descripcion": """Paisajes de altura con lagos y volcanes.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/1/1d/Lago_Chungara_y_volcan_Parinacota.jpg"""
+    },
+    {
+        "nombre": "Termas de Jurasi",
+        "lat": -18.2255,
+        "lon": -69.5250,
+        "tiempo": 2,
+        "descripcion": """Piscinas naturales de aguas termales cerca de Putre.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/5/57/Termas_de_Jurasi_Putre.jpg"""
+    },
+    {
+        "nombre": "Socoroma",
+        "lat": -18.2242,
+        "lon": -69.5870,
+        "tiempo": 2,
+        "descripcion": """Pintoresco pueblo precordillerano con arquitectura tradicional.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/b/b9/Socoroma_Arica_y_Parinacota.jpg"""
+    },
+    {
+        "nombre": "Cuevas de Anzota",
+        "lat": -18.5358,
+        "lon": -70.3511,
+        "tiempo": 1.5,
+        "descripcion": """Formaciones rocosas y miradores junto al mar.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/7/7d/Cuevas_de_Anzota_-_Arica.jpg"""
+    },
+    {
+        "nombre": "Salar de Surire",
+        "lat": -19.366,
+        "lon": -69.383,
+        "tiempo": 3,
+        "descripcion": """Salar con flamencos y geografía única.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/5/57/Salar_de_Surire.jpg"""
+    },
+    {
+        "nombre": "Camarones",
+        "lat": -18.200,
+        "lon": -70.500,
+        "tiempo": 2,
+        "descripcion": """Pueblo costero tradicional, conocido por su gastronomía.""",
+        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/9/9f/Camarones_Arica.jpg"""
+    },
+    {
+        "nombre": "Geoglifos de Lluta",
+        "lat": -18.2,
+        "lon": -70.3,
+        "tiempo": 1.5,
+        "descripcion": """Antiguos geoglifos prehispánicos visibles desde miradores.""",
+        "imagen_url": """https://images.visitchile.com/destinos/283_6702_la_ruta_altiplanca.jpg"""
+    }
 ]
 
 # --- Funciones de itinerario ---
@@ -206,5 +276,4 @@ if st.button("Responder"):
                     st.image(img_pil,width=300)
                 except:
                     pass
-
 
