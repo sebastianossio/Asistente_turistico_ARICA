@@ -19,7 +19,8 @@ from PIL import Image as PILImage
 import openai
 import json
 import re
-
+with open("atractivos.json", "r", encoding="utf-8") as f:
+    atractivos = json.load(f)
 # --- Configuración OpenAI ---
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
