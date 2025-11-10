@@ -17,18 +17,23 @@ import openai
 import os
 import re
 
-# --- Configuración OpenAI segura ---
+# --------------------
+# CONFIGURACIÓN OPENAI
+# --------------------
+# Opción 1: Variable de entorno
 api_key = os.getenv("OPENAI_API_KEY")
 
-if api_key:
-    openai.api_key = api_key
-    openai_configured = True
-else:
-    openai_configured = False
-    st.warning("⚠️ OpenAI API key no encontrada. El chatbot no funcionará. "
-               "Configura la variable de entorno OPENAI_API_KEY.")
+# Opción 2: Clave temporal para pruebas locales (reemplaza con tu propia key de OpenAI)
+if not api_key:
+    api_key = "TU_API_KEY_DE_PRUEBA_AQUI"
+    st.warning("⚠️ Usando API key temporal para pruebas. Para producción, configura la variable de entorno OPENAI_API_KEY.")
 
-# --- Lista de atractivos turísticos ---
+openai.api_key = api_key
+openai_configured = True if api_key else False
+
+# --------------------
+# LISTA DE ATRACTIVOS
+# --------------------
 atractivos = [
     {
         "nombre": "Playa Chinchorro",
@@ -72,7 +77,9 @@ atractivos = [
     }
 ]
 
-# --- Funciones ---
+# --------------------
+# FUNCIONES
+# --------------------
 def distancia(a, b):
     return geodesic((a["lat"], a["lon"]), (b["lat"], b["lon"])).km
 
@@ -137,7 +144,9 @@ def responder_pregunta(pregunta):
             resultado.append((linea, None))
     return resultado
 
-# --- Streamlit ---
+# --------------------
+# STREAMLIT UI
+# --------------------
 st.set_page_config(page_title="Asistente Turístico Arica y Parinacota", layout="wide")
 st.title("🏔️ Asistente Turístico Interactivo + Chatbot")
 
@@ -198,7 +207,9 @@ if st.button("Generar Itinerario"):
         pdf_buffer = generar_pdf(itinerario)
         st.download_button("📄 Descargar PDF con fotos y ruta", pdf_buffer, "itinerario_arica.pdf")
 
-# --- Chatbot ---
+# --------------------
+# CHATBOT
+# --------------------
 st.subheader("💬 Chatbot turístico con imágenes")
 pregunta = st.text_input("Escribe tu pregunta sobre Arica y Parinacota:")
 if st.button("Responder"):
