@@ -1,17 +1,5 @@
 import streamlit as st
 from openai import OpenAI
-import os
-import sys
-import subprocess
-
-# --- Instalación automática de librerías ---
-required = ["streamlit", "pandas", "folium", "geopy", "reportlab", "googletrans==4.0.0-rc1", "scipy"]
-for pkg in required:
-    try:
-        __import__(pkg.split('==')[0])
-    except ImportError:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", pkg])
-
 import streamlit as st
 import pandas as pd
 import folium
@@ -72,19 +60,17 @@ def distancia(a, b):
 def ordenar_por_distancia(destinos):
     if len(destinos) <= 1:
         return destinos
-    # Algoritmo simple de "Traveling Salesman" por permutación (solo para pocos destinos)
     min_dist = float("inf")
     mejor_ruta = destinos
     for perm in permutations(destinos):
-        d = sum(distancia(perm[i], perm[i + 1]) for i in range(len(perm) - 1))
+        d = sum(distancia(perm[i], perm[i+1]) for i in range(len(perm)-1))
         if d < min_dist:
             min_dist = d
             mejor_ruta = perm
     return list(mejor_ruta)
 
 def generar_itinerario_optimizado(destinos, dias):
-    if not destinos:
-        return []
+    if not destinos: return []
     ruta = ordenar_por_distancia(destinos)
     itinerario = []
     for idx, d in enumerate(ruta):
@@ -94,7 +80,9 @@ def generar_itinerario_optimizado(destinos, dias):
             "Destino": d["nombre"],
             "Descripción": d["descripcion"],
             "Tiempo estimado (h)": d["tiempo"],
-            "Zona": d["zona"]
+            "Zona": d["zona"],
+            "lat": d["lat"],
+            "lon": d["lon"]
         })
     return itinerario
 
@@ -104,7 +92,7 @@ def generar_pdf(itinerario, idioma="es"):
     styles = getSampleStyleSheet()
     title = "Tour Itinerary - Arica & Parinacota" if idioma=="en" else "Itinerario Turístico - Arica y Parinacota"
     elementos = [Paragraph(title, styles['Title']), Spacer(1,12)]
-    data = [["Día", "Destino", "Zona", "Tiempo estimado (h)", "Descripción"]]
+    data = [["Día","Destino","Zona","Tiempo estimado (h)","Descripción"]]
     for item in itinerario:
         desc = item["Descripción"]
         if idioma=="en": desc = translator.translate(desc, src="es", dest="en").text
@@ -138,9 +126,9 @@ def responder_chat(pregunta):
         else: return "Dime qué tipo de lugares prefieres: playa, cultura, pueblos o naturaleza."
     return "Puedo recomendarte playas, cultura, naturaleza o pueblos. ¿Cuál prefieres?"
 
-# --- INTERFAZ ---
+# --- Interfaz Streamlit ---
 st.set_page_config(page_title="Asistente Turístico Arica y Parinacota", layout="wide")
-st.title("🏔️ Asistente Turístico Final - Arica y Parinacota con Rutas Optimizadas")
+st.title("🏔️ Asistente Turístico Final - Rutas Optimizadas")
 st.markdown("Planifica tu viaje, genera itinerarios optimizados, chat inteligente, traducción automática y comparte fácilmente 📱✉️")
 
 # --- Chat ---
@@ -166,7 +154,7 @@ for i,a in enumerate(atractivos):
         st.image(a["imagen"], caption=a["nombre"], use_container_width=True)
         if st.checkbox(f"Seleccionar: {a['nombre']}"): seleccionados.append(a)
 
-# Recomendaciones según preferencias
+# Recomendaciones según memoria
 if st.session_state.memoria["preferencias"]:
     tipo_pref = list(st.session_state.memoria["preferencias"])
     sugerencias = [a for a in atractivos if a["tipo"] in tipo_pref and a not in seleccionados]
@@ -185,15 +173,13 @@ if st.button("Generar Itinerario Optimizado"):
         st.dataframe(df)
 
         mapa = folium.Map(location=[-18.48, -70.32], zoom_start=8)
-        coords = []
+        line_coords = []
         for dest in itinerario:
-            coords.append((dest["Destino"], dest["lat"] if "lat" in dest else 0, dest["lon"] if "lon" in dest else 0))
-            folium.Marker([dest.get("lat",0), dest.get("lon",0)],
+            folium.Marker([dest["lat"], dest["lon"]],
                           popup=Popup(f"<b>{dest['Destino']}</b><br>{dest['Descripción']}", max_width=250),
                           tooltip=dest["Destino"]).add_to(mapa)
-        # Agregar línea de ruta
-        line_coords = [(a["lat"], a["lon"]) for a in seleccionados]
-        if len(line_coords)>1: PolyLine(line_coords, color="blue", weight=3).add_to(mapa)
+            line_coords.append((dest["lat"], dest["lon"]))
+        if len(line_coords)>1: PolyLine(line_coords,color="blue",weight=3).add_to(mapa)
         st.components.v1.html(mapa._repr_html_(), height=500)
 
         # PDF español e inglés
@@ -212,3 +198,4 @@ if st.button("Generar Itinerario Optimizado"):
         body = urllib.parse.quote(resumen)
         mail_link = f"mailto:?subject={subject}&body={body}"
         st.markdown(f"[✉️ Compartir por Email]({mail_link})")
+
