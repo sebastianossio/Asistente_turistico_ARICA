@@ -20,10 +20,9 @@ import re
 # --------------------
 # CONFIGURACIÓN OPENAI
 # --------------------
-# Opción 1: Variable de entorno
 api_key = os.getenv("OPENAI_API_KEY")
 
-# Opción 2: Clave temporal para pruebas locales (reemplaza con tu propia key de OpenAI)
+# Clave temporal para pruebas locales
 if not api_key:
     api_key = "TU_API_KEY_DE_PRUEBA_AQUI"
     st.warning("⚠️ Usando API key temporal para pruebas. Para producción, configura la variable de entorno OPENAI_API_KEY.")
@@ -32,49 +31,23 @@ openai.api_key = api_key
 openai_configured = True if api_key else False
 
 # --------------------
-# LISTA DE ATRACTIVOS
+# LISTA AMPLIADA DE ATRACTIVOS
 # --------------------
 atractivos = [
-    {
-        "nombre": "Playa Chinchorro",
-        "lat": -18.4726,
-        "lon": -70.3128,
-        "tiempo": 2,
-        "descripcion": "Amplia playa urbana ideal para nadar y disfrutar del sol.",
-        "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/1/11/Playa_Chinchorro_Arica_2020.jpg"
-    },
-    {
-        "nombre": "Playa El Laucho",
-        "lat": -18.4872,
-        "lon": -70.3232,
-        "tiempo": 1.5,
-        "descripcion": "Playa céntrica de aguas calmadas, ideal para familias.",
-        "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Playa_El_Laucho_Arica.jpg"
-    },
-    {
-        "nombre": "Humedal del Río Lluta",
-        "lat": -18.4395,
-        "lon": -70.3170,
-        "tiempo": 1.5,
-        "descripcion": "Santuario de aves migratorias con senderos y miradores naturales.",
-        "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Humedal_del_R%C3%ADo_Lluta_-_Arica.jpg"
-    },
-    {
-        "nombre": "Morro de Arica",
-        "lat": -18.4806,
-        "lon": -70.3273,
-        "tiempo": 2,
-        "descripcion": "Histórico morro con museo y mirador panorámico.",
-        "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Morro_de_Arica.jpg"
-    },
-    {
-        "nombre": "Museo de Sitio Colón 10",
-        "lat": -18.4770,
-        "lon": -70.3183,
-        "tiempo": 1.5,
-        "descripcion": "Museo con las momias más antiguas del mundo, cultura Chinchorro.",
-        "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Museo_de_Sitio_Col%C3%B3n_10_-_Arica.jpg"
-    }
+    {"nombre": "Playa Chinchorro", "lat": -18.4726, "lon": -70.3128, "tiempo": 2, "descripcion": "Amplia playa urbana ideal para nadar y disfrutar del sol.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/1/11/Playa_Chinchorro_Arica_2020.jpg"},
+    {"nombre": "Playa El Laucho", "lat": -18.4872, "lon": -70.3232, "tiempo": 1.5, "descripcion": "Playa céntrica de aguas calmadas, ideal para familias.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Playa_El_Laucho_Arica.jpg"},
+    {"nombre": "Humedal del Río Lluta", "lat": -18.4395, "lon": -70.3170, "tiempo": 1.5, "descripcion": "Santuario de aves migratorias con senderos y miradores naturales.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Humedal_del_R%C3%ADo_Lluta_-_Arica.jpg"},
+    {"nombre": "Morro de Arica", "lat": -18.4806, "lon": -70.3273, "tiempo": 2, "descripcion": "Histórico morro con museo y mirador panorámico.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Morro_de_Arica.jpg"},
+    {"nombre": "Museo de Sitio Colón 10", "lat": -18.4770, "lon": -70.3183, "tiempo": 1.5, "descripcion": "Museo con las momias más antiguas del mundo, cultura Chinchorro.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Museo_de_Sitio_Col%C3%B3n_10_-_Arica.jpg"},
+    {"nombre": "Cuevas de Anzota", "lat": -18.5358, "lon": -70.3511, "tiempo": 1.5, "descripcion": "Formaciones rocosas junto al mar, historia arqueológica y miradores.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Cuevas_de_Anzota_-_Arica.jpg"},
+    {"nombre": "Valle de Azapa", "lat": -18.481, "lon": -70.308, "tiempo": 2, "descripcion": "Valle agrícola famoso por olivos, aceitunas y cultura local.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Valle_de_Azapa.jpg"},
+    {"nombre": "Geoglifos de Lluta", "lat": -18.20, "lon": -70.30, "tiempo": 1.5, "descripcion": "Antiguos dibujos prehispánicos visibles desde miradores en el valle de Lluta.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/5/57/Sajama_National_Park_Bolivia.jpg"},
+    {"nombre": "Parque Nacional Lauca", "lat": -18.2333, "lon": -69.1667, "tiempo": 4, "descripcion": "Área de altura con lagos, volcanes y fauna altiplánica.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Lago_Chungara_y_volcan_Parinacota.jpg"},
+    {"nombre": "Putre", "lat": -18.1977, "lon": -69.5593, "tiempo": 3, "descripcion": "Pueblo altiplánico tradicional, base para excursiones al altiplano.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Putre_-_Chile.jpg"},
+    {"nombre": "Termas de Jurasi", "lat": -18.2255, "lon": -69.5250, "tiempo": 2, "descripcion": "Piscinas termales naturales cerca de Putre, ideal para relajarse en altura.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/5/57/Termas_de_Jurasi_Putre.jpg"},
+    {"nombre": "Salar de Surire", "lat": -19.366, "lon": -69.383, "tiempo": 3, "descripcion": "Salar andino con flamencos y paisaje altiplánico único.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/5/57/Salar_de_Surire.jpg"},
+    {"nombre": "Codpa", "lat": -18.1928, "lon": -69.8819, "tiempo": 2, "descripcion": "Valle tradicional con vino artesanal, historia y pueblo rural tranquilo.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/9/91/Codpa_Arica.jpg"},
+    {"nombre": "Camarones", "lat": -18.200, "lon": -70.500, "tiempo": 2, "descripcion": "Pueblo costero tradicional, conocido por mariscos y ambiente tranquilo.", "imagen_url": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Camarones_Arica.jpg"}
 ]
 
 # --------------------
@@ -224,4 +197,5 @@ if st.button("Responder"):
                     st.image(img_pil, width=300)
                 except:
                     pass
+
 
