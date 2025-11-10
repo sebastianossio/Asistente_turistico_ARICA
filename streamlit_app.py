@@ -14,6 +14,13 @@ from googletrans import Translator
 import random
 from itertools import permutations
 import urllib.parse
+import openai
+import os
+
+# --- Configurar API Key de OpenAI ---
+# Debes poner tu API Key como variable de entorno:
+# export OPENAI_API_KEY="TU_API_KEY"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # --- Traductor ---
 translator = Translator()
@@ -105,38 +112,40 @@ def generar_pdf(itinerario, idioma="es"):
     buffer.seek(0)
     return buffer
 
-# --- Chatbot con memoria ---
+# --- Chatbot con memoria y OpenAI ---
 if "memoria" not in st.session_state: st.session_state.memoria = {"preferencias": set()}
 if "chat_hist" not in st.session_state: st.session_state.chat_hist = []
 
-def responder_chat(pregunta):
-    p = pregunta.lower()
+def responder_chat_openai(pregunta):
     memoria = st.session_state.memoria
-    if "playa" in p: memoria["preferencias"].add("playa"); return "Perfecto 🌊, te gustan las playas."
-    if "naturaleza" in p or "paisaje" in p: memoria["preferencias"].add("naturaleza"); return "Genial 🌿, te gusta la naturaleza."
-    if "historia" in p or "cultura" in p or "museo" in p: memoria["preferencias"].add("cultura"); return "Interesante 🏛️, te gusta la cultura."
-    if "pueblo" in p: memoria["preferencias"].add("pueblo"); return "Maravilloso 🏘️, te gustan los pueblos."
-    if "gracias" in p: return "¡De nada! 😄"
-    if "hola" in p: return "¡Hola! 👋 Soy tu asistente turístico. ¿Qué tipo de lugares te interesa?"
-    if "recomienda" in p or "sugerencia" in p:
-        if memoria["preferencias"]:
-            tipo = random.choice(list(memoria["preferencias"]))
-            sugeridos = [a["nombre"] for a in atractivos if a["tipo"]==tipo]
-            return f"Como te interesa {tipo}, te recomiendo: {', '.join(sugeridos)}."
-        else: return "Dime qué tipo de lugares prefieres: playa, cultura, pueblos o naturaleza."
-    return "Puedo recomendarte playas, cultura, naturaleza o pueblos. ¿Cuál prefieres?"
+    # Guardar preferencias simples
+    p = pregunta.lower()
+    if "playa" in p: memoria["preferencias"].add("playa")
+    if "naturaleza" in p or "paisaje" in p: memoria["preferencias"].add("naturaleza")
+    if "historia" in p or "cultura" in p or "museo" in p: memoria["preferencias"].add("cultura")
+    if "pueblo" in p: memoria["preferencias"].add("pueblo")
+    # Respuesta con OpenAI
+    try:
+        respuesta = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role":"system","content":"Eres un asistente turístico en Arica y Parinacota"},
+                      {"role":"user","content":pregunta}]
+        )
+        return respuesta.choices[0].message.content
+    except Exception as e:
+        return f"🤖 Error de OpenAI: {str(e)}"
 
 # --- Interfaz Streamlit ---
 st.set_page_config(page_title="Asistente Turístico Arica y Parinacota", layout="wide")
-st.title("🏔️ Asistente Turístico Final - Rutas Optimizadas")
-st.markdown("Planifica tu viaje, genera itinerarios optimizados, chat inteligente, traducción automática y comparte fácilmente 📱✉️")
+st.title("🏔️ Asistente Turístico Final - Rutas Optimizadas con Chat GPT")
+st.markdown("Planifica tu viaje, genera itinerarios optimizados, chat inteligente con OpenAI, traducción automática, mapas y PDF 📱✉️")
 
 # --- Chat ---
 st.sidebar.header("💬 Chat con tu Asistente")
 pregunta = st.sidebar.text_input("Escribe tu pregunta:")
 if st.sidebar.button("Enviar"):
     if pregunta:
-        respuesta = responder_chat(pregunta)
+        respuesta = responder_chat_openai(pregunta)
         st.session_state.chat_hist.append(("Tú", pregunta))
         st.session_state.chat_hist.append(("Asistente", respuesta))
 for autor, texto in st.session_state.chat_hist:
@@ -153,16 +162,6 @@ for i,a in enumerate(atractivos):
     with cols[i%2]:
         st.image(a["imagen"], caption=a["nombre"], use_container_width=True)
         if st.checkbox(f"Seleccionar: {a['nombre']}"): seleccionados.append(a)
-
-# Recomendaciones según memoria
-if st.session_state.memoria["preferencias"]:
-    tipo_pref = list(st.session_state.memoria["preferencias"])
-    sugerencias = [a for a in atractivos if a["tipo"] in tipo_pref and a not in seleccionados]
-    if sugerencias:
-        st.markdown("✨ Basado en tus gustos, también te recomiendo:")
-        for s in sugerencias[:3]:
-            st.image(s["imagen"], caption=f"{s['nombre']} (Sugerido)", use_container_width=True)
-            if st.checkbox(f"Agregar sugerido: {s['nombre']}"): seleccionados.append(s)
 
 if st.button("Generar Itinerario Optimizado"):
     if not seleccionados: st.warning("Selecciona al menos un destino.")
@@ -198,3 +197,4 @@ if st.button("Generar Itinerario Optimizado"):
         body = urllib.parse.quote(resumen)
         mail_link = f"mailto:?subject={subject}&body={body}"
         st.markdown(f"[✉️ Compartir por Email]({mail_link})")
+
