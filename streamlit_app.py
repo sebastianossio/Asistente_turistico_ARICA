@@ -20,9 +20,10 @@ import os
 import re
 
 # --- Configuración OpenAI ---
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Asegúrate de tener la variable de entorno configurada
+# CORRECCIÓN: quitar cualquier llave al final
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# --- Lista de atractivos ---
+# --- Lista de atractivos turísticos ---
 atractivos = [
     {
         "nombre": "Playa Chinchorro",
