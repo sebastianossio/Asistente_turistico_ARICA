@@ -1,10 +1,8 @@
 streamlit
-openai
 pandas
 folium
 geopy
 reportlab
 googletrans==4.0.0-rc1
+openai
 scipy
-python -m pip install openai
-python -m pip install streamlit pandas folium geopy reportlab googletrans==4.0.0-rc1 openai scipy
