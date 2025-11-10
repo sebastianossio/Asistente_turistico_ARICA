@@ -176,7 +176,7 @@ if st.button("Generar Itinerario Optimizado"):
         line_coords = []
         for dest in itinerario:
             folium.Marker([dest["lat"], dest["lon"]],
-                          popup=Popup(f"<b>{dest['Destino']}</b><br>{dest['Descripción']}", max_width=250),
+                          popup=f"<b>{dest['Destino']}</b><br>{dest['Descripción']}",
                           tooltip=dest["Destino"]).add_to(mapa)
             line_coords.append((dest["lat"], dest["lon"]))
         if len(line_coords)>1: PolyLine(line_coords,color="blue",weight=3).add_to(mapa)
@@ -198,4 +198,3 @@ if st.button("Generar Itinerario Optimizado"):
         body = urllib.parse.quote(resumen)
         mail_link = f"mailto:?subject={subject}&body={body}"
         st.markdown(f"[✉️ Compartir por Email]({mail_link})")
-
