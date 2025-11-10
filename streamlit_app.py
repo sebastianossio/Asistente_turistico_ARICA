@@ -17,9 +17,16 @@ import openai
 import os
 import re
 
-# --- Configuración OpenAI ---
-# CORRECCIÓN: quitar cualquier llave al final
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# --- Configuración OpenAI segura ---
+api_key = os.getenv("OPENAI_API_KEY")
+
+if api_key:
+    openai.api_key = api_key
+    openai_configured = True
+else:
+    openai_configured = False
+    st.warning("⚠️ OpenAI API key no encontrada. El chatbot no funcionará. "
+               "Configura la variable de entorno OPENAI_API_KEY.")
 
 # --- Lista de atractivos turísticos ---
 atractivos = [
@@ -103,20 +110,27 @@ def generar_itinerario(destinos, dias):
     return itinerario
 
 def responder_pregunta(pregunta):
-    prompt = f"Actúa como guía turístico experto en Arica y Parinacota y responde claramente: {pregunta}. Menciona los nombres de los destinos tal como están en la lista."
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=prompt,
-        temperature=0.6,
-        max_tokens=400
-    )
-    texto = response.choices[0].text.strip()
+    if not openai_configured:
+        return [("Chatbot no disponible: falta API key de OpenAI.", None)]
+    
+    prompt = f"Actúa como guía turístico experto en Arica y Parinacota y responde claramente: {pregunta}."
+    try:
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=prompt,
+            temperature=0.6,
+            max_tokens=400
+        )
+        texto = response.choices[0].text.strip()
+    except Exception as e:
+        return [(f"Error al llamar a OpenAI: {e}", None)]
+    
     resultado = []
     for linea in texto.split('\n'):
         encontrado = False
         for a in atractivos:
             if re.search(rf"\b{re.escape(a['nombre'])}\b", linea, re.IGNORECASE):
-                resultado.append((linea, a["imagen_url"]))
+                resultado.append((linea, a.get("imagen_url")))
                 encontrado = True
                 break
         if not encontrado:
@@ -184,6 +198,7 @@ if st.button("Generar Itinerario"):
         pdf_buffer = generar_pdf(itinerario)
         st.download_button("📄 Descargar PDF con fotos y ruta", pdf_buffer, "itinerario_arica.pdf")
 
+# --- Chatbot ---
 st.subheader("💬 Chatbot turístico con imágenes")
 pregunta = st.text_input("Escribe tu pregunta sobre Arica y Parinacota:")
 if st.button("Responder"):
