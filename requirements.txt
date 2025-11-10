@@ -1,2 +1,8 @@
 streamlit
 openai
+pandas
+folium
+geopy
+reportlab
+googletrans==4.0.0-rc1
+scipy
