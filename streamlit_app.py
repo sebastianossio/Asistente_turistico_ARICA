@@ -1,5 +1,6 @@
 import streamlit as st
 from openai import OpenAI
+pip install streamlit pandas folium geopy reportlab googletrans==4.0.0-rc1 scipy
 import streamlit as st
 import pandas as pd
 import folium
