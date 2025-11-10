@@ -27,14 +27,14 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # --- Traductor ---
 translator = Translator()
 
-# --- Datos de atractivos turísticos ---
+# --- Datos de atractivos turísticos con fotos fiables ---
 atractivos = [
     {"nombre": "Playa Chinchorro", "lat": -18.4726, "lon": -70.3128, "zona": "Arica", "tipo": "playa", "tiempo": 2,
      "descripcion": "Amplia playa urbana ideal para nadar y disfrutar del sol.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Playa_Chinchorro_Arica.jpg"},
     {"nombre": "Playa El Laucho", "lat": -18.4872, "lon": -70.3232, "zona": "Arica", "tipo": "playa", "tiempo": 1.5,
      "descripcion": "Playa céntrica de aguas calmadas, ideal para familias.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Playa_El_Laucho%2C_Arica.jpg"},
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Playa_El_Laucho_Arica.jpg"},
     {"nombre": "Morro de Arica", "lat": -18.4806, "lon": -70.3273, "zona": "Arica", "tipo": "historia", "tiempo": 2,
      "descripcion": "Histórico morro con museo y mirador panorámico.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Morro_de_Arica.jpg"},
@@ -71,13 +71,12 @@ atractivos = [
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Camarones_Arica.jpg"}
 ]
 
-# --- Funciones auxiliares ---
+# --- Funciones auxiliares (distancia, itinerario, PDF, chat) ---
 def distancia(a, b):
     return geodesic((a["lat"], a["lon"]), (b["lat"], b["lon"])).km
 
 def ordenar_por_distancia(destinos):
-    if len(destinos) <= 1:
-        return destinos
+    if len(destinos) <= 1: return destinos
     min_dist = float("inf")
     mejor_ruta = destinos
     for perm in permutations(destinos):
@@ -123,7 +122,6 @@ def generar_pdf(itinerario, idioma="es"):
     buffer.seek(0)
     return buffer
 
-# --- Chatbot con OpenAI ---
 if "memoria" not in st.session_state: st.session_state.memoria = {"preferencias": set()}
 if "chat_hist" not in st.session_state: st.session_state.chat_hist = []
 
@@ -144,12 +142,12 @@ def responder_chat_openai(pregunta):
     except Exception as e:
         return f"🤖 Error de OpenAI: {str(e)}"
 
-# --- Interfaz Streamlit ---
+# --- Interfaz ---
 st.set_page_config(page_title="Asistente Turístico Arica y Parinacota", layout="wide")
 st.title("🏔️ Asistente Turístico Final")
 st.markdown("Planifica tu viaje, genera itinerarios optimizados, chat con OpenAI, mapas y PDF 📱✉️")
 
-# --- Chat ---
+# Chat
 st.sidebar.header("💬 Chat con tu Asistente")
 pregunta = st.sidebar.text_input("Escribe tu pregunta:")
 if st.sidebar.button("Enviar"):
@@ -161,7 +159,7 @@ for autor, texto in st.session_state.chat_hist:
     if autor=="Tú": st.sidebar.markdown(f"**🧍‍♂️ {autor}:** {texto}")
     else: st.sidebar.markdown(f"**🤖 {autor}:** {texto}")
 
-# --- Planificador de viaje ---
+# Itinerario
 st.header("🗓️ Genera tu Itinerario Optimizado")
 dias = st.number_input("Cantidad de días de visita", min_value=1, max_value=10, value=3)
 st.subheader("Atractivos Turísticos")
@@ -170,7 +168,7 @@ cols = st.columns(2)
 for i, a in enumerate(atractivos):
     with cols[i % 2]:
         st.image(a["imagen"], caption=a["nombre"], use_container_width=True)
-        if st.checkbox(f"Seleccionar: {a['nombre']}"):
+        if st.checkbox(f"Seleccionar: {a['nombre']}", key=a["nombre"]):
             seleccionados.append(a)
 
 if st.button("Generar Itinerario Optimizado"):
@@ -207,6 +205,5 @@ if st.button("Generar Itinerario Optimizado"):
         body = urllib.parse.quote(resumen)
         mail_link = f"mailto:?subject={subject}&body={body}"
         st.markdown(f"[✉️ Compartir por Email]({mail_link})")
-
 
 
