@@ -1,5 +1,6 @@
 import streamlit as st
 from openai import OpenAI
+ip install folium streamlit pandas geopy reportlab
 import streamlit as st
 import pandas as pd
 import math
