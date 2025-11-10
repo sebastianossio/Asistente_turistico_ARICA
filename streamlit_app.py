@@ -1,5 +1,10 @@
 import streamlit as st
-from openai import OpenAI
+import openai
+import os
+
+# Configura tu API Key
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 import streamlit as st
 import pandas as pd
 import folium
