@@ -18,128 +18,17 @@ from io import BytesIO
 import requests
 from PIL import Image as PILImage
 import openai
+import json
 import re
 
 # --- Configuración OpenAI ---
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# --- Datos de atractivos turísticos ---
-atractivos = [
-    {
-        "nombre": "Playa Chinchorro",
-        "lat": -18.4726,
-        "lon": -70.3128,
-        "tiempo": 2,
-        "descripcion": """Amplia playa urbana ideal para nadar y disfrutar del sol.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/1/11/Playa_Chinchorro_Arica_2020.jpg"""
-    },
-    {
-        "nombre": "Playa El Laucho",
-        "lat": -18.4872,
-        "lon": -70.3232,
-        "tiempo": 1.5,
-        "descripcion": """Playa céntrica de aguas calmadas, ideal para familias.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/3/3f/Playa_El_Laucho_Arica.jpg"""
-    },
-    {
-        "nombre": "Morro de Arica",
-        "lat": -18.4806,
-        "lon": -70.3273,
-        "tiempo": 2,
-        "descripcion": """Histórico morro con museo y mirador panorámico.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/8/8d/Morro_de_Arica.jpg"""
-    },
-    {
-        "nombre": "Museo de Sitio Colón 10",
-        "lat": -18.4770,
-        "lon": -70.3183,
-        "tiempo": 1.5,
-        "descripcion": """Museo con las momias más antiguas del mundo, cultura Chinchorro.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/f/f3/Museo_de_Sitio_Col%C3%B3n_10_-_Arica.jpg"""
-    },
-    {
-        "nombre": "Humedal del Río Lluta",
-        "lat": -18.4395,
-        "lon": -70.3170,
-        "tiempo": 1.5,
-        "descripcion": """Santuario de aves migratorias con senderos y miradores naturales.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/b/bd/Humedal_del_R%C3%ADo_Lluta_-_Arica.jpg"""
-    },
-    {
-        "nombre": "Valle de Azapa",
-        "lat": -18.481,
-        "lon": -70.308,
-        "tiempo": 2,
-        "descripcion": """Famoso valle de olivos y cultura agrícola.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/3/3d/Valle_de_Azapa.jpg"""
-    },
-    {
-        "nombre": "Putre",
-        "lat": -18.1977,
-        "lon": -69.5593,
-        "tiempo": 3,
-        "descripcion": """Encantador pueblo altiplánico y base para visitar el Parque Lauca.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/7/7e/Putre_-_Chile.jpg"""
-    },
-    {
-        "nombre": "Parque Nacional Lauca",
-        "lat": -18.2333,
-        "lon": -69.1667,
-        "tiempo": 4,
-        "descripcion": """Paisajes de altura con lagos y volcanes.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/1/1d/Lago_Chungara_y_volcan_Parinacota.jpg"""
-    },
-    {
-        "nombre": "Termas de Jurasi",
-        "lat": -18.2255,
-        "lon": -69.5250,
-        "tiempo": 2,
-        "descripcion": """Piscinas naturales de aguas termales cerca de Putre.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/5/57/Termas_de_Jurasi_Putre.jpg"""
-    },
-    {
-        "nombre": "Socoroma",
-        "lat": -18.2242,
-        "lon": -69.5870,
-        "tiempo": 2,
-        "descripcion": """Pintoresco pueblo precordillerano con arquitectura tradicional.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/b/b9/Socoroma_Arica_y_Parinacota.jpg"""
-    },
-    {
-        "nombre": "Cuevas de Anzota",
-        "lat": -18.5358,
-        "lon": -70.3511,
-        "tiempo": 1.5,
-        "descripcion": """Formaciones rocosas y miradores junto al mar.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/7/7d/Cuevas_de_Anzota_-_Arica.jpg"""
-    },
-    {
-        "nombre": "Salar de Surire",
-        "lat": -19.366,
-        "lon": -69.383,
-        "tiempo": 3,
-        "descripcion": """Salar con flamencos y geografía única.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/5/57/Salar_de_Surire.jpg"""
-    },
-    {
-        "nombre": "Camarones",
-        "lat": -18.200,
-        "lon": -70.500,
-        "tiempo": 2,
-        "descripcion": """Pueblo costero tradicional, conocido por su gastronomía.""",
-        "imagen_url": """https://upload.wikimedia.org/wikipedia/commons/9/9f/Camarones_Arica.jpg"""
-    },
-    {
-        "nombre": "Geoglifos de Lluta",
-        "lat": -18.2,
-        "lon": -70.3,
-        "tiempo": 1.5,
-        "descripcion": """Antiguos geoglifos prehispánicos visibles desde miradores.""",
-        "imagen_url": """https://images.visitchile.com/destinos/283_6702_la_ruta_altiplanca.jpg"""
-    }
-]
+# --- Leer atractivos desde JSON ---
+with open("atractivos.json","r",encoding="utf-8") as f:
+    atractivos = json.load(f)
 
-# --- Funciones de itinerario ---
+# --- Funciones ---
 def distancia(a,b):
     return geodesic((a["lat"], a["lon"]),(b["lat"],b["lon"])).km
 
@@ -170,7 +59,6 @@ def generar_itinerario(destinos,dias):
                                "imagen_url":d["imagen_url"]})
     return itinerario
 
-# --- Función Chatbot enriquecida ---
 def responder_pregunta(pregunta):
     prompt = f"Actúa como guía turístico experto en Arica y Parinacota y responde claramente: {pregunta}. Menciona los nombres de los destinos tal como están en la lista."
     response = openai.Completion.create(
@@ -180,8 +68,6 @@ def responder_pregunta(pregunta):
         max_tokens=400
     )
     texto = response.choices[0].text.strip()
-    
-    # Extraer nombres de destinos mencionados y devolver con imágenes
     resultado=[]
     for linea in texto.split('\n'):
         encontrado=False
@@ -198,10 +84,8 @@ def responder_pregunta(pregunta):
 st.set_page_config(page_title="Asistente Turístico Arica y Parinacota", layout="wide")
 st.title("🏔️ Asistente Turístico Interactivo + Chatbot")
 
-# Días
 dias = st.number_input("Cantidad de días de visita", min_value=1, max_value=10, value=3)
 
-# Mostrar atractivos
 st.subheader("Atractivos Turísticos")
 seleccionados=[]
 num_cols=3
@@ -217,15 +101,12 @@ for i,a in enumerate(atractivos):
         if st.checkbox(f"Seleccionar", key=a["nombre"]):
             seleccionados.append(a)
 
-# Generar itinerario
 if st.button("Generar Itinerario"):
     if not seleccionados:
         st.warning("Selecciona al menos un destino.")
     else:
         itinerario=generar_itinerario(seleccionados,dias)
         st.dataframe(pd.DataFrame(itinerario))
-        
-        # Mapa
         mapa=folium.Map(location=[-18.48,-70.32], zoom_start=8)
         line_coords=[]
         for dest in itinerario:
@@ -235,7 +116,6 @@ if st.button("Generar Itinerario"):
             PolyLine(line_coords,color="blue",weight=3).add_to(mapa)
         st.components.v1.html(mapa._repr_html_(),height=500)
         
-        # PDF
         def generar_pdf(itinerario):
             buffer=BytesIO()
             doc=SimpleDocTemplate(buffer,pagesize=letter)
@@ -261,7 +141,6 @@ if st.button("Generar Itinerario"):
         pdf_buffer=generar_pdf(itinerario)
         st.download_button("📄 Descargar PDF con fotos y ruta",pdf_buffer,"itinerario_arica.pdf")
 
-# Chatbot enriquecido
 st.subheader("💬 Chatbot turístico con imágenes")
 pregunta = st.text_input("Escribe tu pregunta sobre Arica y Parinacota:")
 if st.button("Responder"):
