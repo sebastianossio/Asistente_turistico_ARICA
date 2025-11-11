@@ -12,6 +12,7 @@ import requests
 from PIL import Image
 from io import BytesIO
 import tempfile
+import re
 
 # ---------- CONFIGURACIÓN ---------- #
 st.set_page_config(page_title="App Turística - Arica y Parinacota", layout="wide")
@@ -92,17 +93,23 @@ def generar_link_google_maps(destinos_seleccionados):
 def generar_pdf_lujo(itinerario):
     pdf = FPDF('P', 'mm', 'A4')
     pdf.set_auto_page_break(auto=True, margin=15)
+
+    def limpiar_texto(texto):
+        import re
+        texto = re.sub(r'[^\x00-\x7F]+',' ', texto)
+        return texto
+
     # Portada
     pdf.add_page()
     pdf.set_font("Arial", "B", 28)
-    pdf.cell(0, 20, "🌅 Itinerario Turístico", ln=True, align="C")
+    pdf.cell(0, 20, "Itinerario Turístico", ln=True, align="C")
     pdf.set_font("Arial", "B", 22)
     pdf.cell(0, 15, "Arica y Parinacota", ln=True, align="C")
     try:
         portada_url = "https://upload.wikimedia.org/wikipedia/commons/2/2c/Morro_de_Arica.jpg"
         response = requests.get(portada_url)
         img = Image.open(BytesIO(response.content))
-        temp_path = tempfile.mktemp(suffix=".jpg")
+        temp_path = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
         img.thumbnail((500,500))
         img.save(temp_path)
         pdf.image(temp_path, x=30, y=60, w=150)
@@ -122,34 +129,37 @@ def generar_pdf_lujo(itinerario):
     # Itinerario por día
     for dia, lugares in itinerario.items():
         pdf.set_font("Arial", "B", 20)
-        pdf.cell(0, 10, dia, ln=True)
+        pdf.cell(0, 10, limpiar_texto(dia), ln=True)
         pdf.ln(5)
         for lugar in lugares:
             color = colores_region.get(lugar["region"], "#FFFFFF")
             pdf.set_fill_color(int(color[1:3],16), int(color[3:5],16), int(color[5:7],16))
             pdf.set_font("Arial", "B", 16)
-            pdf.multi_cell(0,8,f"{lugar['nombre']} ({lugar['region']})", border=1, fill=True)
+            pdf.multi_cell(0,8, limpiar_texto(f"{lugar['nombre']} ({lugar['region']})"), border=1, fill=True)
+            # Imagen
             try:
                 response = requests.get(lugar["imagen"])
                 img = Image.open(BytesIO(response.content))
-                temp_path = tempfile.mktemp(suffix=".jpg")
+                temp_path = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
                 img.thumbnail((400,400))
                 img.save(temp_path)
                 pdf.image(temp_path, w=120)
             except:
                 pass
             pdf.set_font("Arial", "", 12)
-            pdf.multi_cell(0,6,f"{lugar['tipo']} - {lugar['tiempo']} hrs\n{lugar['descripcion']}")
+            pdf.multi_cell(0,6, limpiar_texto(f"{lugar['tipo']} - {lugar['tiempo']} hrs\n{lugar['descripcion']}"))
             pdf.ln(2)
             idx_actual = lugares.index(lugar)
             if idx_actual < len(lugares)-1:
-                dist = calcular_distancia(lugar, lugares[idx_actual+1])
-                pdf.multi_cell(0,6,f"Distancia al siguiente: {dist:.1f} km")
+                dist = geodesic((lugar["lat"], lugar["lon"]), (lugares[idx_actual+1]["lat"], lugares[idx_actual+1]["lon"])).km
+                pdf.multi_cell(0,6, f"Distancia al siguiente: {dist:.1f} km")
             pdf.ln(5)
         pdf.add_page()
+
     pdf.set_font("Arial", "I", 10)
     pdf.cell(0,10,"Visita Arica y Parinacota - Naturaleza, cultura y aventura.", ln=True, align="C")
-    filename = tempfile.mktemp(suffix=".pdf")
+
+    filename = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
     pdf.output(filename)
     return filename
 
@@ -185,10 +195,20 @@ for seccion in ["Ciudad","Costa","Valle","Altiplano"]:
 if destinos_seleccionados:
     itinerario = generar_itinerario_por_cercania(destinos_seleccionados,dias)
 
-    st.subheader("🗺️ Mapa de tu ruta turística")
+    st.subheader("🗺️ Mapa de tu ruta turística con recorrido")
     mapa = folium.Map(location=[-18.48,-70.32], zoom_start=9)
-    for d in destinos_seleccionados:
-        folium.Marker([d["lat"],d["lon"]], popup=d["nombre"]).add_to(mapa)
+    colores_dia = ["blue", "red", "green", "orange", "purple", "darkred", "cadetblue"]
+    for idx_dia, (dia, lugares) in enumerate(itinerario.items()):
+        coords_dia = []
+        for lugar in lugares:
+            folium.Marker(
+                [lugar["lat"],lugar["lon"]],
+                popup=f"{lugar['nombre']} ({dia})",
+                icon=folium.Icon(color=colores_dia[idx_dia%len(colores_dia)])
+            ).add_to(mapa)
+            coords_dia.append((lugar["lat"], lugar["lon"]))
+        if len(coords_dia) > 1:
+            folium.PolyLine(coords_dia, color=colores_dia[idx_dia%len(colores_dia)], weight=3, opacity=0.7, tooltip=dia).add_to(mapa)
     st_folium(mapa,width=700,height=450)
 
     st.subheader("🗓️ Itinerario sugerido")
