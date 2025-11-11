@@ -6,3 +6,8 @@ reportlab
 googletrans==4.0.0-rc1
 openai
 scipy
+streamlit-folium
+geopy
+pillow
+fpdf
+requests
