@@ -13,10 +13,10 @@ from PIL import Image
 from io import BytesIO
 import tempfile
 
-# ---------- CONFIGURACIÓN DE LA APP ---------- #
+# ---------- CONFIGURACIÓN ---------- #
 st.set_page_config(page_title="App Turística - Arica y Parinacota", layout="wide")
 
-# ---------- DATOS DE LOS DESTINOS ---------- #
+# ---------- DATOS DE DESTINOS ---------- #
 destinos = [
     {"nombre": "Morro de Arica", "lat": -18.477, "lon": -70.330, "tipo": "Cultura", "tiempo": 1.5,
      "region": "Ciudad", "descripcion": "Icono histórico con vista panorámica de la ciudad.",
@@ -33,9 +33,6 @@ destinos = [
     {"nombre": "Humedal del Río Lluta", "lat": -18.425, "lon": -70.324, "tipo": "Naturaleza", "tiempo": 2,
      "region": "Costa", "descripcion": "Ecosistema protegido, ideal para observación de aves.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Humedal_del_Rio_Lluta_Arica.jpg"},
-    {"nombre": "Museo de Sitio Colón 10", "lat": -18.480, "lon": -70.317, "tipo": "Cultura", "tiempo": 1,
-     "region": "Ciudad", "descripcion": "Museo arqueológico con vestigios de culturas prehispánicas.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Museo_de_Sitio_Colon_10_Arica.jpg"},
     {"nombre": "Museo de Azapa", "lat": -18.52, "lon": -70.33, "tipo": "Cultura", "tiempo": 1.5,
      "region": "Valle", "descripcion": "Museo arqueológico con momias y artefactos de la cultura Chinchorro.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Museo_Azapa_Arica.jpg"},
@@ -48,9 +45,6 @@ destinos = [
     {"nombre": "La Ex Aduana", "lat": -18.479, "lon": -70.329, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ex_Aduana_Arica.jpg"},
-    {"nombre": "Presencias Tutelares", "lat": -18.48, "lon": -70.33, "tipo": "Cultura", "tiempo": 1.5,
-     "region": "Ciudad", "descripcion": "Sitio arqueológico con petroglifos de gran valor cultural.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Presencias_Tutelares_Arica.jpg"},
     {"nombre": "Putre", "lat": -18.195, "lon": -69.559, "tipo": "Cultura", "tiempo": 3,
      "region": "Altiplano", "descripcion": "Pueblo tradicional a orillas del altiplano con cultura Aymara.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Putre_village.jpg"},
@@ -82,9 +76,10 @@ def generar_itinerario_por_cercania(destinos_seleccionados, dias):
         itinerario[f"Día {dia+1}"].append(actual)
         if len(itinerario[f"Día {dia+1}"]) >= math.ceil(len(destinos_seleccionados)/dias):
             dia = (dia+1)%dias
-        siguiente = min(pendientes, key=lambda x: calcular_distancia(actual, x))
-        pendientes.remove(siguiente)
-        actual = siguiente
+        if pendientes:
+            siguiente = min(pendientes, key=lambda x: calcular_distancia(actual, x))
+            pendientes.remove(siguiente)
+            actual = siguiente
     itinerario[f"Día {dia+1}"].append(actual)
     return itinerario
 
@@ -94,36 +89,66 @@ def generar_link_google_maps(destinos_seleccionados):
         base_url += f"{d['lat']},{d['lon']}/"
     return base_url
 
-def generar_pdf(itinerario):
-    pdf = FPDF()
+def generar_pdf_lujo(itinerario):
+    pdf = FPDF('P', 'mm', 'A4')
     pdf.set_auto_page_break(auto=True, margin=15)
+    # Portada
     pdf.add_page()
+    pdf.set_font("Arial", "B", 28)
+    pdf.cell(0, 20, "🌅 Itinerario Turístico", ln=True, align="C")
+    pdf.set_font("Arial", "B", 22)
+    pdf.cell(0, 15, "Arica y Parinacota", ln=True, align="C")
+    try:
+        portada_url = "https://upload.wikimedia.org/wikipedia/commons/2/2c/Morro_de_Arica.jpg"
+        response = requests.get(portada_url)
+        img = Image.open(BytesIO(response.content))
+        temp_path = tempfile.mktemp(suffix=".jpg")
+        img.thumbnail((500,500))
+        img.save(temp_path)
+        pdf.image(temp_path, x=30, y=60, w=150)
+    except:
+        pass
+    pdf.add_page()
+
+    # Tabla de contenido
     pdf.set_font("Arial", "B", 20)
-    pdf.cell(0, 20, "Itinerario Turístico - Arica y Parinacota", ln=True, align="C")
+    pdf.cell(0, 10, "Tabla de Contenido", ln=True)
+    pdf.ln(5)
+    pdf.set_font("Arial", "", 14)
+    for idx, dia in enumerate(itinerario.keys()):
+        pdf.cell(0, 8, f"{idx+1}. {dia}", ln=True)
+    pdf.add_page()
+
+    # Itinerario por día
     for dia, lugares in itinerario.items():
-        pdf.set_font("Arial", "B", 16)
+        pdf.set_font("Arial", "B", 20)
         pdf.cell(0, 10, dia, ln=True)
-        pdf.set_font("Arial", "", 12)
         pdf.ln(5)
-        for i, lugar in enumerate(lugares):
+        for lugar in lugares:
             color = colores_region.get(lugar["region"], "#FFFFFF")
             pdf.set_fill_color(int(color[1:3],16), int(color[3:5],16), int(color[5:7],16))
-            pdf.multi_cell(0, 8, f"{lugar['nombre']} ({lugar['tipo']}) - {lugar['tiempo']} hrs\n{lugar['descripcion']}", fill=True)
+            pdf.set_font("Arial", "B", 16)
+            pdf.multi_cell(0,8,f"{lugar['nombre']} ({lugar['region']})", border=1, fill=True)
             try:
                 response = requests.get(lugar["imagen"])
                 img = Image.open(BytesIO(response.content))
-                img_path = f"/tmp/{lugar['nombre']}.jpg"
-                img.save(img_path)
-                pdf.image(img_path, w=90)
+                temp_path = tempfile.mktemp(suffix=".jpg")
+                img.thumbnail((400,400))
+                img.save(temp_path)
+                pdf.image(temp_path, w=120)
             except:
                 pass
-            if i < len(lugares)-1:
-                dist = calcular_distancia(lugares[i], lugares[i+1])
-                pdf.multi_cell(0, 8, f"Distancia al siguiente: {dist:.1f} km")
+            pdf.set_font("Arial", "", 12)
+            pdf.multi_cell(0,6,f"{lugar['tipo']} - {lugar['tiempo']} hrs\n{lugar['descripcion']}")
+            pdf.ln(2)
+            idx_actual = lugares.index(lugar)
+            if idx_actual < len(lugares)-1:
+                dist = calcular_distancia(lugar, lugares[idx_actual+1])
+                pdf.multi_cell(0,6,f"Distancia al siguiente: {dist:.1f} km")
             pdf.ln(5)
-        pdf.ln(10)
+        pdf.add_page()
     pdf.set_font("Arial", "I", 10)
-    pdf.cell(0, 10, "Visita Arica y Parinacota - Naturaleza, cultura y aventura.", ln=True, align="C")
+    pdf.cell(0,10,"Visita Arica y Parinacota - Naturaleza, cultura y aventura.", ln=True, align="C")
     filename = tempfile.mktemp(suffix=".pdf")
     pdf.output(filename)
     return filename
@@ -137,7 +162,7 @@ dias = st.sidebar.slider("Días de visita", 1, 7, 3)
 
 destinos_seleccionados = []
 
-# ---------- MOSTRAR CARRUSEL HORIZONTAL POR SECCIÓN ---------- #
+# Mostrar destinos por secciones
 for seccion in ["Ciudad","Costa","Valle","Altiplano"]:
     st.subheader(f"{seccion}")
     lugares_seccion = [d for d in destinos if d["region"]==seccion]
@@ -156,7 +181,7 @@ for seccion in ["Ciudad","Costa","Valle","Altiplano"]:
                 if st.checkbox(f"Añadir al itinerario", key=f"{lugar['nombre']}"):
                     destinos_seleccionados.append(lugar)
 
-# ---------- GENERAR ITINERARIO ---------- #
+# Generar itinerario y mapa
 if destinos_seleccionados:
     itinerario = generar_itinerario_por_cercania(destinos_seleccionados,dias)
 
@@ -184,9 +209,10 @@ if destinos_seleccionados:
     ruta_url = generar_link_google_maps(destinos_seleccionados)
     st.markdown(f"🚗 [Ver ruta completa en Google Maps]({ruta_url})", unsafe_allow_html=True)
 
-    if st.button("📄 Generar PDF con imágenes"):
-        pdf_path = generar_pdf(itinerario)
+    if st.button("📄 Generar PDF de Lujo"):
+        pdf_path = generar_pdf_lujo(itinerario)
         with open(pdf_path,"rb") as f:
-            st.download_button("Descargar Itinerario en PDF", f, file_name="Itinerario_Turistico_Arica.pdf")
+            st.download_button("Descargar PDF Turístico Profesional", f, file_name="Itinerario_Turistico_Arica_Lujo.pdf")
 else:
     st.info("Selecciona al menos un atractivo turístico para generar tu itinerario.")
+
