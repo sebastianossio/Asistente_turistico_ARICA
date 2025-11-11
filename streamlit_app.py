@@ -4,21 +4,6 @@ import os
 
 # streamlit_app.py
 
-import streamlit as st
-from geopy.distance import geodesic
-from fpdf import FPDF
-import math
-import folium
-from streamlit_folium import st_folium
-import requests
-from PIL import Image
-from io import BytesIO
-import tempfile
-
-# ---------- CONFIGURACIÓN DE LA APP ---------- #
-st.set_page_config(page_title="App Turística - Arica y Parinacota", layout="wide")
-
-# ---------- DATOS DE LOS DESTINOS ---------- #
 destinos = [
     {"nombre": "Morro de Arica", "lat": -18.477, "lon": -70.330, "tipo": "Cultura", "tiempo": 1.5,
      "region": "Ciudad", "descripcion": "Icono histórico con vista panorámica de la ciudad.",
@@ -36,8 +21,23 @@ destinos = [
      "region": "Ciudad", "descripcion": "Museo arqueológico con vestigios de culturas prehispánicas.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Museo_de_Sitio_Colon_10_Arica.jpg"},
     {"nombre": "Humedal del Río Lluta", "lat": -18.425, "lon": -70.324, "tipo": "Naturaleza", "tiempo": 2,
-     "region": "Valle", "descripcion": "Ecosistema protegido, ideal para observación de aves.",
+     "region": "Costa", "descripcion": "Ecosistema protegido, ideal para observación de aves.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Humedal_del_Rio_Lluta_Arica.jpg"},
+    {"nombre": "Museo de Azapa", "lat": -18.52, "lon": -70.33, "tipo": "Cultura", "tiempo": 1.5,
+     "region": "Valle", "descripcion": "Museo arqueológico con momias y artefactos de la cultura Chinchorro.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Museo_Azapa_Arica.jpg"},
+    {"nombre": "Valle de Lluta", "lat": -18.43, "lon": -70.32, "tipo": "Naturaleza", "tiempo": 2,
+     "region": "Valle", "descripcion": "Hermoso valle con agricultura tradicional y paisajes naturales.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/1/12/Valle_de_Lluta_Arica.jpg"},
+    {"nombre": "Catedral de San Marcos", "lat": -18.478, "lon": -70.328, "tipo": "Cultura", "tiempo": 1,
+     "region": "Ciudad", "descripcion": "Imponente catedral del centro de Arica, arquitectura neoclásica.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/0/02/Catedral_de_San_Marcos_Arica.jpg"},
+    {"nombre": "La Ex Aduana", "lat": -18.479, "lon": -70.329, "tipo": "Cultura", "tiempo": 1,
+     "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ex_Aduana_Arica.jpg"},
+    {"nombre": "Presencias Tutelares", "lat": -18.48, "lon": -70.33, "tipo": "Cultura", "tiempo": 1.5,
+     "region": "Ciudad", "descripcion": "Sitio arqueológico con petroglifos de gran valor cultural.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Presencias_Tutelares_Arica.jpg"},
     {"nombre": "Putre", "lat": -18.195, "lon": -69.559, "tipo": "Cultura", "tiempo": 3,
      "region": "Altiplano", "descripcion": "Pueblo tradicional a orillas del altiplano con cultura Aymara.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Putre_village.jpg"},
@@ -52,123 +52,3 @@ destinos = [
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/74/Salar_de_Surire.jpg"}
 ]
 
-colores_region = {"Ciudad": "#FFA07A", "Costa": "#87CEEB", "Valle": "#98FB98", "Altiplano": "#DDA0DD"}
-
-# ---------- FUNCIONES ---------- #
-def calcular_distancia(d1, d2):
-    return geodesic((d1["lat"], d1["lon"]), (d2["lat"], d2["lon"])).km
-
-def generar_itinerario_por_cercania(destinos_seleccionados, dias):
-    itinerario = {f"Día {i+1}": [] for i in range(dias)}
-    if not destinos_seleccionados:
-        return itinerario
-    pendientes = destinos_seleccionados.copy()
-    dia = 0
-    actual = pendientes.pop(0)
-    while pendientes:
-        itinerario[f"Día {dia+1}"].append(actual)
-        if len(itinerario[f"Día {dia+1}"]) >= math.ceil(len(destinos_seleccionados)/dias):
-            dia = (dia+1)%dias
-        siguiente = min(pendientes, key=lambda x: calcular_distancia(actual, x))
-        pendientes.remove(siguiente)
-        actual = siguiente
-    itinerario[f"Día {dia+1}"].append(actual)
-    return itinerario
-
-def generar_link_google_maps(destinos_seleccionados):
-    base_url = "https://www.google.com/maps/dir/"
-    for d in destinos_seleccionados:
-        base_url += f"{d['lat']},{d['lon']}/"
-    return base_url
-
-def generar_pdf(itinerario):
-    pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 20)
-    pdf.cell(0, 20, "Itinerario Turístico - Arica y Parinacota", ln=True, align="C")
-    for dia, lugares in itinerario.items():
-        pdf.set_font("Arial", "B", 16)
-        pdf.cell(0, 10, dia, ln=True)
-        pdf.set_font("Arial", "", 12)
-        pdf.ln(5)
-        for i, lugar in enumerate(lugares):
-            color = colores_region.get(lugar["region"], "#FFFFFF")
-            pdf.set_fill_color(int(color[1:3],16), int(color[3:5],16), int(color[5:7],16))
-            pdf.multi_cell(0, 8, f"{lugar['nombre']} ({lugar['tipo']}) - {lugar['tiempo']} hrs\n{lugar['descripcion']}", fill=True)
-            try:
-                response = requests.get(lugar["imagen"])
-                img = Image.open(BytesIO(response.content))
-                img_path = f"/tmp/{lugar['nombre']}.jpg"
-                img.save(img_path)
-                pdf.image(img_path, w=90)
-            except:
-                pass
-            if i < len(lugares)-1:
-                dist = calcular_distancia(lugares[i], lugares[i+1])
-                pdf.multi_cell(0, 8, f"Distancia al siguiente: {dist:.1f} km")
-            pdf.ln(5)
-        pdf.ln(10)
-    pdf.set_font("Arial", "I", 10)
-    pdf.cell(0, 10, "Visita Arica y Parinacota - Naturaleza, cultura y aventura.", ln=True, align="C")
-    filename = tempfile.mktemp(suffix=".pdf")
-    pdf.output(filename)
-    return filename
-
-# ---------- INTERFAZ ---------- #
-st.title("🌅 Guía Turística - Arica y Parinacota")
-st.markdown("Explora la región de la eterna primavera con itinerarios personalizados por secciones geográficas.")
-
-st.sidebar.header("🧭 Configura tu viaje")
-dias = st.sidebar.slider("Días de visita", 1, 7, 3)
-
-destinos_seleccionados = []
-
-# ---------- MOSTRAR CARRUSEL HORIZONTAL POR SECCIÓN ---------- #
-for seccion in ["Ciudad","Costa","Valle","Altiplano"]:
-    st.subheader(f"{seccion}")
-    lugares_seccion = [d for d in destinos if d["region"]==seccion]
-    # Usar contenedor horizontal
-    container = st.container()
-    with container:
-        cols = st.columns(len(lugares_seccion))
-        for i, lugar in enumerate(lugares_seccion):
-            with cols[i]:
-                st.image(lugar["imagen"], use_column_width=True)
-                st.markdown(f"**{lugar['nombre']}** ({lugar['tipo']})")
-                st.markdown(f"🕓 {lugar['tiempo']} hrs")
-                st.markdown(f"📖 {lugar['descripcion']}")
-                if st.checkbox(f"Añadir al itinerario", key=f"{lugar['nombre']}"):
-                    destinos_seleccionados.append(lugar)
-
-# ---------- GENERAR ITINERARIO ---------- #
-if destinos_seleccionados:
-    itinerario = generar_itinerario_por_cercania(destinos_seleccionados,dias)
-
-    st.subheader("🗺️ Mapa de tu ruta turística")
-    mapa = folium.Map(location=[-18.48,-70.32], zoom_start=9)
-    for d in destinos_seleccionados:
-        folium.Marker([d["lat"],d["lon"]], popup=d["nombre"]).add_to(mapa)
-    st_folium(mapa,width=700,height=450)
-
-    st.subheader("🗓️ Itinerario sugerido")
-    for dia,lugares in itinerario.items():
-        st.markdown(f"### {dia}")
-        cols = st.columns(len(lugares))
-        for i,lugar in enumerate(lugares):
-            with cols[i]:
-                st.image(lugar["imagen"], use_column_width=True)
-                st.markdown(f"**{lugar['nombre']}**")
-                st.markdown(f"🕓 {lugar['tiempo']} hrs")
-                st.markdown(f"📖 {lugar['descripcion']}")
-        st.divider()
-
-    ruta_url = generar_link_google_maps(destinos_seleccionados)
-    st.markdown(f"🚗 [Ver ruta completa en Google Maps]({ruta_url})", unsafe_allow_html=True)
-
-    if st.button("📄 Generar PDF con imágenes"):
-        pdf_path = generar_pdf(itinerario)
-        with open(pdf_path,"rb") as f:
-            st.download_button("Descargar Itinerario en PDF", f, file_name="Itinerario_Turistico_Arica.pdf")
-else:
-    st.info("Selecciona al menos un atractivo turístico para generar tu itinerario.")
