@@ -79,7 +79,7 @@ destinos = [
      "imagen": img("Valle de Azapa.jpeg")},
 
     {"nombre": "Catedral de San Marcos", "lat": -18.478, "lon": -70.328, "tipo": "Cultura", "tiempo": 1,
-     "region": "Ciudad", "descripcion": "Imponente catedral del centro de Arica.",
+     "region": "Ciudad", "descripcion": "Catedral histórica del centro de Arica.",
      "imagen": img("Catedral de San Marcos.jpeg")},
 
     {"nombre": "La Ex Aduana", "lat": -18.479, "lon": -70.329, "tipo": "Cultura", "tiempo": 1,
@@ -94,16 +94,14 @@ destinos = [
      "region": "Altiplano", "descripcion": "Parque con volcanes, lagunas y fauna típica de la zona.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Parque_Nacional_Lauca_Chile.jpg"},
 
-    {"nombre": "Lago Chungará", "lat": -18.25, "lon": -69.15, "tipo": "Naturaleza", "tiempo": 2,
-     "region": "Altiplano", "descripcion": "Lago a gran altitud con vistas espectaculares y flamencos.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Lago_Chungara.jpg"},
+    # ✅ Lago Chungará ELIMINADO
 
     {"nombre": "Salar de Surire", "lat": -18.85, "lon": -69.05, "tipo": "Naturaleza", "tiempo": 3.5,
      "region": "Altiplano", "descripcion": "Salar impresionante con fauna típica del altiplano.",
      "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/74/Salar_de_Surire.jpg"},
 ]
 
-colores_region = {"Ciudad": "#FFA07A", "Costa": "#87CEEB", "Valle": "#98FB98", "Altiplano": "#DDA0DD"}
+
 
 # ---------- FUNCIONES ---------- #
 def calcular_distancia(d1, d2):
