@@ -48,7 +48,7 @@ destinos = [
 
     {"nombre": "Playa El Laucho", "lat": -18.486, "lon": -70.318, "tipo": "Playa", "tiempo": 2,
      "region": "Costa", "descripcion": "Playa tranquila ideal para relajarse y tomar sol.",
-     "imagen": img(".jpg"},
+     "imagen": img("Playa el Laucho.jpg")},
 
     {"nombre": "Playa La Lisera", "lat": -18.489, "lon": -70.327, "tipo": "Playa", "tiempo": 2,
      "region": "Costa", "descripcion": "Playa muy visitada, ideal para baño y descanso cerca del centro.",
@@ -84,7 +84,7 @@ destinos = [
 
     {"nombre": "La Ex Aduana", "lat": -18.479, "lon": -70.329, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
-     "imagen": img(".jpg")},
+     "imagen": img("Ex-Aduana-Casa-de-la-Cultura-Arica.jpg")},
 
     {"nombre": "Putre", "lat": -18.195, "lon": -69.559, "tipo": "Cultura", "tiempo": 3,
      "region": "Altiplano", "descripcion": "Pueblo tradicional a orillas del altiplano con cultura Aymara.",
