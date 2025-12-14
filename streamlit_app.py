@@ -86,7 +86,7 @@ destinos = [
 
    {"nombre": "Catedral de San Marcos", "lat": -18.47897, "lon": -70.32072, "tipo": "Cultura", "tiempo": 1,
  "region": "Ciudad", "descripcion": "Catedral histórica diseñada por Gustave Eiffel.",
- "imagen": img("Catedral de San Marcos.jpeg")},
+ "imagen": img("Catedral-San-Marcos.jpg")},
 
 
     {"nombre": "La Ex Aduana", "lat": -18.479, "lon": -70.329, "tipo": "Cultura", "tiempo": 1,
