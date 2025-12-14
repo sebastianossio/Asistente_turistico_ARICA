@@ -133,137 +133,232 @@ def generar_link_google_maps(destinos_seleccionados):
         base_url += f"{d['lat']},{d['lon']}/"
     return base_url
 def generar_pdf_lujo(itinerario):
-    pdf = FPDF('P', 'mm', 'A4')
-    pdf.set_auto_page_break(auto=True, margin=15)
-
-    # 🔹 Convierte texto Unicode (tildes, ñ) a formato compatible con FPDF
+    # ---------- Helpers ---------- #
     def limpiar_texto(texto):
+        # FPDF clásico no soporta Unicode: convertimos a latin-1 compatible
         if texto is None:
             return ""
-        return (
-            str(texto)
-            .encode("latin-1", "ignore")
-            .decode("latin-1")
-        )
+        return str(texto).encode("latin-1", "ignore").decode("latin-1")
 
-    # Colores internos por región (no depende de variables externas)
     colores_region_local = {
-        "Ciudad": "#FFA07A",
-        "Costa": "#87CEEB",
-        "Valle": "#98FB98",
-        "Altiplano": "#DDA0DD"
+        "Ciudad":   "#FFB199",
+        "Costa":    "#9AD9FF",
+        "Valle":    "#A6F3A6",
+        "Altiplano":"#E0B3FF",
     }
 
+    def hex_to_rgb(h):
+        h = h.lstrip("#")
+        return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
     def imagen_a_jpg_temp(ruta_o_url):
-        """
-        Convierte cualquier imagen (local o URL) a JPG RGB compatible con FPDF.
-        """
+        """Convierte cualquier imagen (local o URL) a JPG RGB compatible con FPDF."""
         try:
             if isinstance(ruta_o_url, str) and ruta_o_url.startswith("http"):
                 r = requests.get(ruta_o_url, timeout=15)
                 r.raise_for_status()
-                img = Image.open(BytesIO(r.content))
+                img_pil = Image.open(BytesIO(r.content))
             else:
-                img = Image.open(ruta_o_url)
+                img_pil = Image.open(ruta_o_url)
 
-            img = img.convert("RGB")
-            img.thumbnail((900, 900))
+            img_pil = img_pil.convert("RGB")
+            img_pil.thumbnail((1200, 1200))
 
             tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
             tmp_path = tmp.name
             tmp.close()
 
-            img.save(tmp_path, "JPEG", quality=85)
+            img_pil.save(tmp_path, "JPEG", quality=88)
             return tmp_path
         except:
             return None
 
+    # ---------- PDF class with footer ---------- #
+    class PDF(FPDF):
+        def footer(self):
+            self.set_y(-12)
+            self.set_draw_color(220, 220, 220)
+            self.line(10, self.get_y(), 200, self.get_y())
+            self.set_font("Arial", "I", 9)
+            self.set_text_color(120, 120, 120)
+            self.cell(0, 10, f"Página {self.page_no()}", align="C")
+
+    pdf = PDF("P", "mm", "A4")
+    pdf.set_auto_page_break(auto=True, margin=14)
+
     # ---------- PORTADA ---------- #
     pdf.add_page()
-    pdf.set_font("Arial", "B", 28)
-    pdf.cell(0, 20, limpiar_texto("Itinerario Turístico"), ln=True, align="C")
-    pdf.set_font("Arial", "B", 22)
-    pdf.cell(0, 15, limpiar_texto("Arica y Parinacota"), ln=True, align="C")
 
-    # Imagen de portada (primer destino disponible)
-    portada_img = None
+    # Fondo suave
+    pdf.set_fill_color(248, 248, 248)
+    pdf.rect(0, 0, 210, 297, style="F")
+
+    # Título
+    pdf.set_text_color(25, 25, 25)
+    pdf.set_font("Arial", "B", 30)
+    pdf.ln(18)
+    pdf.cell(0, 12, limpiar_texto("Itinerario Turístico"), ln=True, align="C")
+
+    pdf.set_font("Arial", "B", 18)
+    pdf.cell(0, 10, limpiar_texto("Arica y Parinacota"), ln=True, align="C")
+
+    pdf.set_font("Arial", "", 12)
+    pdf.set_text_color(90, 90, 90)
+    pdf.cell(0, 7, limpiar_texto("Guía personalizada con mapa y tiempos estimados"), ln=True, align="C")
+
+    # Fecha
+    from datetime import datetime
+    pdf.set_font("Arial", "I", 10)
+    pdf.cell(0, 7, limpiar_texto(f"Generado el {datetime.now().strftime('%d-%m-%Y')}"), ln=True, align="C")
+
+    # Imagen hero (primer destino disponible)
+    hero_img = None
     for _, lugares in itinerario.items():
         if lugares:
-            portada_img = imagen_a_jpg_temp(lugares[0].get("imagen"))
+            hero_img = imagen_a_jpg_temp(lugares[0].get("imagen"))
             break
 
-    if portada_img:
+    if hero_img:
+        # Tarjeta blanca para imagen
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_draw_color(235, 235, 235)
+        pdf.rounded_rect = getattr(pdf, "rounded_rect", None)  # compat
+        # Marco simple
+        x, y, w, h = 18, 80, 174, 135
+        pdf.rect(x, y, w, h, style="FD")
         try:
-            pdf.image(portada_img, x=30, y=60, w=150)
+            pdf.image(hero_img, x=x+6, y=y+6, w=w-12)
         except:
             pass
+
+    # Banda inferior
+    pdf.set_y(270)
+    pdf.set_fill_color(30, 30, 30)
+    pdf.rect(0, 270, 210, 27, style="F")
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font("Arial", "B", 11)
+    pdf.cell(0, 10, limpiar_texto("Naturaleza • Cultura • Aventura"), ln=True, align="C")
 
     # ---------- ITINERARIO POR DÍA ---------- #
     for dia, lugares in itinerario.items():
         pdf.add_page()
-        pdf.set_font("Arial", "B", 20)
-        pdf.cell(0, 10, limpiar_texto(dia), ln=True)
-        pdf.ln(5)
 
+        # Header del día
+        pdf.set_fill_color(30, 30, 30)
+        pdf.rect(0, 0, 210, 22, style="F")
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font("Arial", "B", 18)
+        pdf.set_xy(10, 6)
+        pdf.cell(0, 10, limpiar_texto(dia), ln=False)
+
+        pdf.ln(26)
+        pdf.set_text_color(60, 60, 60)
+        pdf.set_font("Arial", "", 11)
+        pdf.multi_cell(0, 6, limpiar_texto("Recomendación: sigue el orden propuesto para reducir traslados."))
+
+        pdf.ln(2)
+
+        # Cards de destinos
         for i, lugar in enumerate(lugares):
-            # Color por región
             region = lugar.get("region", "")
             color_hex = colores_region_local.get(region, "#FFFFFF")
-            pdf.set_fill_color(
-                int(color_hex[1:3], 16),
-                int(color_hex[3:5], 16),
-                int(color_hex[5:7], 16)
-            )
+            r, g, b = hex_to_rgb(color_hex)
 
-            pdf.set_font("Arial", "B", 16)
-            pdf.multi_cell(
-                0, 8,
-                limpiar_texto(f"{lugar['nombre']} ({region})"),
-                border=1,
-                fill=True
-            )
+            # Medidas de tarjeta
+            card_x = 10
+            card_w = 190
+            card_h = 62  # altura base
+            start_y = pdf.get_y()
 
-            # Imagen
+            # Si no cabe, nueva página
+            if start_y + card_h > 280:
+                pdf.add_page()
+                pdf.ln(8)
+                start_y = pdf.get_y()
+
+            # Fondo tarjeta
+            pdf.set_draw_color(230, 230, 230)
+            pdf.set_fill_color(255, 255, 255)
+            pdf.rect(card_x, start_y, card_w, card_h, style="FD")
+
+            # Banda color región
+            pdf.set_fill_color(r, g, b)
+            pdf.rect(card_x, start_y, 6, card_h, style="F")
+
+            # Imagen a la izquierda
             img_temp = imagen_a_jpg_temp(lugar.get("imagen"))
+            img_x = card_x + 10
+            img_y = start_y + 8
+            img_w = 52
+            img_h = 46
+
+            # Marco de imagen
+            pdf.set_draw_color(240, 240, 240)
+            pdf.rect(img_x, img_y, img_w, img_h, style="D")
+
             if img_temp:
                 try:
-                    pdf.image(img_temp, w=120)
+                    pdf.image(img_temp, x=img_x, y=img_y, w=img_w, h=img_h)
                 except:
                     pass
 
-            # Texto descriptivo
-            pdf.set_font("Arial", "", 12)
-            pdf.multi_cell(
-                0, 6,
-                limpiar_texto(
-                    f"{lugar['tipo']} - {lugar['tiempo']} hrs\n{lugar['descripcion']}"
-                )
-            )
+            # Texto a la derecha
+            text_x = img_x + img_w + 10
+            text_y = start_y + 8
+            pdf.set_xy(text_x, text_y)
 
-            # Distancia al siguiente
+            # Nombre
+            pdf.set_text_color(25, 25, 25)
+            pdf.set_font("Arial", "B", 13)
+            pdf.multi_cell(0, 6, limpiar_texto(lugar.get("nombre", "")))
+
+            # Meta info
+            pdf.set_text_color(80, 80, 80)
+            pdf.set_font("Arial", "", 10)
+            tipo = limpiar_texto(lugar.get("tipo", ""))
+            tiempo = limpiar_texto(lugar.get("tiempo", ""))
+            reg = limpiar_texto(region)
+            pdf.set_x(text_x)
+            pdf.cell(0, 5, f"Tipo: {tipo}   |   Tiempo: {tiempo} hrs   |   Zona: {reg}", ln=True)
+
+            # Descripción (2–3 líneas)
+            desc = limpiar_texto(lugar.get("descripcion", ""))
+            pdf.set_x(text_x)
+            pdf.set_font("Arial", "", 10)
+            pdf.multi_cell(0, 5, desc[:220])  # corta para que no se desborde
+
+            # Distancia al siguiente (si aplica)
             if i < len(lugares) - 1:
                 try:
                     dist = geodesic(
                         (lugar["lat"], lugar["lon"]),
                         (lugares[i + 1]["lat"], lugares[i + 1]["lon"])
                     ).km
-                    pdf.multi_cell(
-                        0, 6,
-                        limpiar_texto(f"Distancia al siguiente: {dist:.1f} km")
-                    )
+                    pdf.set_x(text_x)
+                    pdf.set_text_color(60, 60, 60)
+                    pdf.set_font("Arial", "I", 9)
+                    pdf.cell(0, 5, limpiar_texto(f"Distancia al siguiente: {dist:.1f} km"), ln=True)
                 except:
                     pass
 
-            pdf.ln(5)
+            pdf.ln(6)
 
-    # ---------- PIE FINAL ---------- #
-    pdf.set_font("Arial", "I", 10)
-    pdf.cell(
-        0, 10,
-        limpiar_texto("Visita Arica y Parinacota - Naturaleza, cultura y aventura."),
-        ln=True,
+    # ---------- CIERRE ---------- #
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 18)
+    pdf.set_text_color(25, 25, 25)
+    pdf.ln(20)
+    pdf.cell(0, 10, limpiar_texto("¡Buen viaje!"), ln=True, align="C")
+    pdf.set_font("Arial", "", 12)
+    pdf.set_text_color(80, 80, 80)
+    pdf.multi_cell(
+        0, 7,
+        limpiar_texto("Este itinerario fue generado automáticamente en base a los destinos seleccionados y un criterio de cercanía."),
         align="C"
     )
+    pdf.ln(6)
+    pdf.set_font("Arial", "I", 10)
+    pdf.cell(0, 8, limpiar_texto("Arica y Parinacota • Turismo inteligente"), ln=True, align="C")
 
     filename = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
     pdf.output(filename)
