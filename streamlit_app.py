@@ -54,9 +54,10 @@ destinos = [
      "region": "Costa", "descripcion": "Playa muy visitada, ideal para baño y descanso cerca del centro.",
      "imagen": img("Playa-La-Lisera-Arica.jpg")},
 
-    {"nombre": "Cuevas de Anzota", "lat": -18.533, "lon": -70.353, "tipo": "Naturaleza", "tiempo": 1.5,
-     "region": "Costa", "descripcion": "Cuevas naturales con formaciones rocosas únicas.",
-     "imagen": img("Cuevas de Anzota.jpg")},
+  {"nombre": "Cuevas de Anzota", "lat": -18.549914, "lon": -70.331249, "tipo": "Naturaleza", "tiempo": 1.5,
+ "region": "Costa", "descripcion": "Cuevas naturales con formaciones rocosas únicas en la costa de Arica.",
+ "imagen": img("Cuevas de Anzota.jpg")},
+
 
     {"nombre": "Playa Chinchorro", "lat": -18.466, "lon": -70.307, "tipo": "Playa", "tiempo": 2.5,
      "region": "Costa", "descripcion": "Famosa playa con actividades de pesca y deportes acuáticos.",
@@ -66,9 +67,10 @@ destinos = [
      "region": "Costa", "descripcion": "Ecosistema protegido, ideal para observación de aves.",
      "imagen": img("Humedal-Rio-Lluta-Region-de-Arica-y-Parinacota.jpg")},
 
-    {"nombre": "Museo de Azapa", "lat": -18.52, "lon": -70.33, "tipo": "Cultura", "tiempo": 1.5,
-     "region": "Valle", "descripcion": "Museo arqueológico con momias y cultura Chinchorro.",
-     "imagen": img("Museo arqueologico San Miguel de Azapa.jpg")},
+  {"nombre": "Museo de Azapa", "lat": -18.516474, "lon": -70.181149, "tipo": "Cultura", "tiempo": 1.5,
+ "region": "Valle", "descripcion": "Museo arqueológico con momias y artefactos prehispánicos.",
+ "imagen": img("Museo arqueologico San Miguel de Azapa.jpg")},
+
 
     {"nombre": "Valle de Lluta", "lat": -18.43, "lon": -70.32, "tipo": "Naturaleza", "tiempo": 2,
      "region": "Valle", "descripcion": "Hermoso valle con agricultura tradicional y paisajes naturales.",
