@@ -42,17 +42,19 @@ def cargar_imagen_para_ui(path_or_url: str):
 
 # ---------- DATOS DE DESTINOS ---------- #
 destinos = [
-    {"nombre": "Morro de Arica", "lat": -18.477, "lon": -70.330, "tipo": "Cultura", "tiempo": 1.5,
-     "region": "Ciudad", "descripcion": "Icono histórico con vista panorámica de la ciudad.",
-     "imagen": img("morro-de-arica-1.jpg")},
+   {"nombre": "Morro de Arica", "lat": -18.47962, "lon": -70.32394, "tipo": "Cultura", "tiempo": 1.5,
+ "region": "Ciudad", "descripcion": "Cerro histórico con vistas panorámicas de la ciudad.",
+ "imagen": img("morro-de-arica-1.jpg")},
+
 
     {"nombre": "Playa El Laucho", "lat": -18.486, "lon": -70.318, "tipo": "Playa", "tiempo": 2,
      "region": "Costa", "descripcion": "Playa tranquila ideal para relajarse y tomar sol.",
      "imagen": img("Playa el Laucho.jpg")},
 
-    {"nombre": "Playa La Lisera", "lat": -18.489, "lon": -70.327, "tipo": "Playa", "tiempo": 2,
-     "region": "Costa", "descripcion": "Playa muy visitada, ideal para baño y descanso cerca del centro.",
-     "imagen": img("Playa-La-Lisera-Arica.jpg")},
+  {"nombre": "Playa La Lisera", "lat": -18.49303, "lon": -70.32565, "tipo": "Playa", "tiempo": 2,
+ "region": "Costa", "descripcion": "Playa popular con arena blanca y aguas tranquilas.",
+ "imagen": img("Playa-La-Lisera-Arica.jpg")},
+
 
   {"nombre": "Cuevas de Anzota", "lat": -18.549914, "lon": -70.331249, "tipo": "Naturaleza", "tiempo": 1.5,
  "region": "Costa", "descripcion": "Cuevas naturales con formaciones rocosas únicas en la costa de Arica.",
@@ -63,9 +65,10 @@ destinos = [
      "region": "Costa", "descripcion": "Famosa playa con actividades de pesca y deportes acuáticos.",
      "imagen": img("Playa-Chinchorro.jpg")},
 
-    {"nombre": "Humedal del Río Lluta", "lat": -18.425, "lon": -70.324, "tipo": "Naturaleza", "tiempo": 2,
-     "region": "Costa", "descripcion": "Ecosistema protegido, ideal para observación de aves.",
-     "imagen": img("Humedal-Rio-Lluta-Region-de-Arica-y-Parinacota.jpg")},
+ {"nombre": "Humedal del Río Lluta", "lat": -18.42097, "lon": -70.33452, "tipo": "Naturaleza", "tiempo": 2,
+ "region": "Costa", "descripcion": "Humedal costero en la desembocadura del río Lluta, ideal para observación de aves.",
+ "imagen": img("Humedal-Rio-Lluta-Region-de-Arica-y-Parinacota.jpg")},
+
 
   {"nombre": "Museo de Azapa", "lat": -18.516474, "lon": -70.181149, "tipo": "Cultura", "tiempo": 1.5,
  "region": "Valle", "descripcion": "Museo arqueológico con momias y artefactos prehispánicos.",
@@ -76,13 +79,15 @@ destinos = [
      "region": "Valle", "descripcion": "Hermoso valle con agricultura tradicional y paisajes naturales.",
      "imagen": img("Valle de lluta.jpg")},
 
-    {"nombre": "Valle de Azapa", "lat": -18.52, "lon": -70.17, "tipo": "Naturaleza", "tiempo": 2,
-     "region": "Valle", "descripcion": "Valle destacado por su agricultura y patrimonio cultural.",
-     "imagen": img("Valle de Azapa.jpeg")},
+   {"nombre": "Valle de Azapa", "lat": -18.51690, "lon": -70.18230, "tipo": "Naturaleza", "tiempo": 2,
+ "region": "Valle", "descripcion": "Valle reconocido por su paisaje, cultura y agricultura local.",
+ "imagen": img("Valle de Azapa.jpeg")},
 
-    {"nombre": "Catedral de San Marcos", "lat": -18.478, "lon": -70.328, "tipo": "Cultura", "tiempo": 1,
-     "region": "Ciudad", "descripcion": "Catedral histórica del centro de Arica.",
-     "imagen": img("Catedral-San-Marcos.jpg")},
+
+   {"nombre": "Catedral de San Marcos", "lat": -18.47897, "lon": -70.32072, "tipo": "Cultura", "tiempo": 1,
+ "region": "Ciudad", "descripcion": "Catedral histórica diseñada por Gustave Eiffel.",
+ "imagen": img("Catedral de San Marcos.jpeg")},
+
 
     {"nombre": "La Ex Aduana", "lat": -18.479, "lon": -70.329, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
