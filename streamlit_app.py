@@ -136,10 +136,17 @@ def generar_pdf_lujo(itinerario):
     pdf = FPDF('P', 'mm', 'A4')
     pdf.set_auto_page_break(auto=True, margin=15)
 
+    # 🔹 Convierte texto Unicode (tildes, ñ) a formato compatible con FPDF
     def limpiar_texto(texto):
-        return re.sub(r'[^\x00-\x7F]+', ' ', str(texto))
+        if texto is None:
+            return ""
+        return (
+            str(texto)
+            .encode("latin-1", "ignore")
+            .decode("latin-1")
+        )
 
-    # Colores internos (no depende de variables globales)
+    # Colores internos por región (no depende de variables externas)
     colores_region_local = {
         "Ciudad": "#FFA07A",
         "Costa": "#87CEEB",
@@ -150,7 +157,6 @@ def generar_pdf_lujo(itinerario):
     def imagen_a_jpg_temp(ruta_o_url):
         """
         Convierte cualquier imagen (local o URL) a JPG RGB compatible con FPDF.
-        Retorna ruta temporal o None si falla.
         """
         try:
             if isinstance(ruta_o_url, str) and ruta_o_url.startswith("http"):
@@ -175,10 +181,11 @@ def generar_pdf_lujo(itinerario):
     # ---------- PORTADA ---------- #
     pdf.add_page()
     pdf.set_font("Arial", "B", 28)
-    pdf.cell(0, 20, "Itinerario Turistico", ln=True, align="C")
+    pdf.cell(0, 20, limpiar_texto("Itinerario Turístico"), ln=True, align="C")
     pdf.set_font("Arial", "B", 22)
-    pdf.cell(0, 15, "Arica y Parinacota", ln=True, align="C")
+    pdf.cell(0, 15, limpiar_texto("Arica y Parinacota"), ln=True, align="C")
 
+    # Imagen de portada (primer destino disponible)
     portada_img = None
     for _, lugares in itinerario.items():
         if lugares:
@@ -191,25 +198,15 @@ def generar_pdf_lujo(itinerario):
         except:
             pass
 
-    pdf.add_page()
-
-    # ---------- TABLA DE CONTENIDO ---------- #
-    pdf.set_font("Arial", "B", 20)
-    pdf.cell(0, 10, "Tabla de Contenido", ln=True)
-    pdf.ln(5)
-    pdf.set_font("Arial", "", 14)
-    for idx, dia in enumerate(itinerario.keys()):
-        pdf.cell(0, 8, f"{idx+1}. {limpiar_texto(dia)}", ln=True)
-    pdf.add_page()
-
-    # ---------- ITINERARIO ---------- #
+    # ---------- ITINERARIO POR DÍA ---------- #
     for dia, lugares in itinerario.items():
+        pdf.add_page()
         pdf.set_font("Arial", "B", 20)
         pdf.cell(0, 10, limpiar_texto(dia), ln=True)
         pdf.ln(5)
 
         for i, lugar in enumerate(lugares):
-            # Color por región (seguro)
+            # Color por región
             region = lugar.get("region", "")
             color_hex = colores_region_local.get(region, "#FFFFFF")
             pdf.set_fill_color(
@@ -221,12 +218,12 @@ def generar_pdf_lujo(itinerario):
             pdf.set_font("Arial", "B", 16)
             pdf.multi_cell(
                 0, 8,
-                limpiar_texto(f"{lugar.get('nombre','')} ({region})"),
+                limpiar_texto(f"{lugar['nombre']} ({region})"),
                 border=1,
                 fill=True
             )
 
-            # Imagen del destino
+            # Imagen
             img_temp = imagen_a_jpg_temp(lugar.get("imagen"))
             if img_temp:
                 try:
@@ -234,12 +231,12 @@ def generar_pdf_lujo(itinerario):
                 except:
                     pass
 
-            # Descripción
+            # Texto descriptivo
             pdf.set_font("Arial", "", 12)
             pdf.multi_cell(
                 0, 6,
                 limpiar_texto(
-                    f"{lugar.get('tipo','')} - {lugar.get('tiempo','')} hrs\n{lugar.get('descripcion','')}"
+                    f"{lugar['tipo']} - {lugar['tiempo']} hrs\n{lugar['descripcion']}"
                 )
             )
 
@@ -250,17 +247,23 @@ def generar_pdf_lujo(itinerario):
                         (lugar["lat"], lugar["lon"]),
                         (lugares[i + 1]["lat"], lugares[i + 1]["lon"])
                     ).km
-                    pdf.multi_cell(0, 6, f"Distancia al siguiente: {dist:.1f} km")
+                    pdf.multi_cell(
+                        0, 6,
+                        limpiar_texto(f"Distancia al siguiente: {dist:.1f} km")
+                    )
                 except:
                     pass
 
             pdf.ln(5)
 
-        pdf.add_page()
-
     # ---------- PIE FINAL ---------- #
     pdf.set_font("Arial", "I", 10)
-    pdf.cell(0, 10, "Visita Arica y Parinacota - Naturaleza, cultura y aventura.", ln=True, align="C")
+    pdf.cell(
+        0, 10,
+        limpiar_texto("Visita Arica y Parinacota - Naturaleza, cultura y aventura."),
+        ln=True,
+        align="C"
+    )
 
     filename = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
     pdf.output(filename)
