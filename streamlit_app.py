@@ -75,7 +75,7 @@ destinos = [
  "imagen": img("Museo arqueologico San Miguel de Azapa.jpg")},
 
 
-    {"nombre": "Valle de Lluta", "lat":  -18.40850, "lon": -70.30890, "tipo": "Naturaleza", "tiempo": 2,
+    {"nombre": "Valle de Lluta", "lat":  -18.40130, "lon": -70.30010, "tipo": "Naturaleza", "tiempo": 2,
      "region": "Valle", "descripcion": "Hermoso valle con agricultura tradicional y paisajes naturales.",
      "imagen": img("Valle de lluta.jpg")},
 
