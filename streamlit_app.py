@@ -440,6 +440,7 @@ if destinos_seleccionados:
 
     st.subheader("🗺️ Mapa de tu ruta turística con recorrido")
     mapa = folium.Map(location=[-18.48, -70.32], zoom_start=9)
+
     colores_dia = ["blue", "red", "green", "orange", "purple", "darkred", "cadetblue"]
 
     for idx_dia, (dia, lugares) in enumerate(itinerario.items()):
@@ -450,6 +451,7 @@ if destinos_seleccionados:
                 popup=f"{lugar['nombre']} ({dia})",
                 icon=folium.Icon(color=colores_dia[idx_dia % len(colores_dia)])
             ).add_to(mapa)
+
             coords_dia.append((lugar["lat"], lugar["lon"]))
 
         if len(coords_dia) > 1:
@@ -463,38 +465,19 @@ if destinos_seleccionados:
 
     st_folium(mapa, width=700, height=450)
 
-    st.subheader("🗓️ Itinerario sugerido")
-    for dia, lugares in itinerario.items():
-        st.markdown(f"### {dia}")
-
-        # Mostrar en filas de 3 para que no se aplaste
-        for i in range(0, len(lugares), 3):
-            cols = st.columns(3)
-            for j, lugar in enumerate(lugares[i:i + 3]):
-                with cols[j]:
-                    img_pil = cargar_imagen_para_ui(lugar["imagen"])
-                    if img_pil is not None:
-                        st.image(img_pil, use_column_width=True)
-                    else:
-                        st.warning(f"No se pudo cargar la imagen de {lugar['nombre']}")
-
-                    st.markdown(f"**{lugar['nombre']}**")
-                    st.markdown(f"🕓 {lugar['tiempo']} hrs")
-                    st.markdown(f"📖 {lugar['descripcion']}")
-        st.divider()
-
-   ruta_url = generar_link_google_maps_desde_itinerario(
-    itinerario,
-    travelmode=modo_viaje
-)
-
-if ruta_url:
-    st.markdown(
-        f"🧭 [Abrir ruta detallada en Google Maps]({ruta_url})",
-        unsafe_allow_html=True
+    # ---- GOOGLE MAPS PRECISO ----
+    ruta_url = generar_link_google_maps_desde_itinerario(
+        itinerario,
+        travelmode=modo_viaje
     )
 
+    if ruta_url:
+        st.markdown(
+            f"🧭 [Abrir ruta detallada en Google Maps]({ruta_url})",
+            unsafe_allow_html=True
+        )
 
+    # ---- PDF ----
     if st.button("📄 Generar PDF de Lujo"):
         pdf_path = generar_pdf_lujo(itinerario)
         with open(pdf_path, "rb") as f:
@@ -505,4 +488,5 @@ if ruta_url:
             )
 else:
     st.info("Selecciona al menos un atractivo turístico para generar tu itinerario.")
+
 
