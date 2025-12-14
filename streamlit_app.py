@@ -21,8 +21,6 @@ st.set_page_config(page_title="App Turística - Arica y Parinacota", layout="wid
 # ---------- RUTAS DE IMÁGENES LOCALES ---------- #
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def img(nombre):
-    return os.path.join(BASE_DIR, "images", nombre)
 destinos = [
     {"nombre": "Morro de Arica", "lat": -18.477, "lon": -70.330, "tipo": "Cultura", "tiempo": 1.5,
      "region": "Ciudad", "descripcion": "Icono histórico con vista panorámica de la ciudad.",
