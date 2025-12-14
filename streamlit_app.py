@@ -60,11 +60,11 @@ destinos = [
 
     {"nombre": "Playa Chinchorro", "lat": -18.466, "lon": -70.307, "tipo": "Playa", "tiempo": 2.5,
      "region": "Costa", "descripcion": "Famosa playa con actividades de pesca y deportes acuáticos.",
-     "imagen": img(".jpg")},
+     "imagen": img("Playa-Chinchorro.jpg")},
 
     {"nombre": "Humedal del Río Lluta", "lat": -18.425, "lon": -70.324, "tipo": "Naturaleza", "tiempo": 2,
      "region": "Costa", "descripcion": "Ecosistema protegido, ideal para observación de aves.",
-     "imagen": img(".jpg")},
+     "imagen": img("Humedal-Rio-Lluta-Region-de-Arica-y-Parinacota.jpg")},
 
     {"nombre": "Museo de Azapa", "lat": -18.52, "lon": -70.33, "tipo": "Cultura", "tiempo": 1.5,
      "region": "Valle", "descripcion": "Museo arqueológico con momias y cultura Chinchorro.",
@@ -88,15 +88,15 @@ destinos = [
 
     {"nombre": "Putre", "lat": -18.195, "lon": -69.559, "tipo": "Cultura", "tiempo": 3,
      "region": "Altiplano", "descripcion": "Pueblo tradicional a orillas del altiplano con cultura Aymara.",
-     "imagen": img(".jpg")},
+     "imagen": img("Putre.jpg")},
 
     {"nombre": "Parque Nacional Lauca", "lat": -18.243, "lon": -69.352, "tipo": "Naturaleza", "tiempo": 4,
      "region": "Altiplano", "descripcion": "Parque con volcanes, lagunas y fauna típica de la zona.",
-     "imagen": img(".jpg")},
+     "imagen": img("Parque nacional Lauca.jpg")},
 
     {"nombre": "Salar de Surire", "lat": -18.85, "lon": -69.05, "tipo": "Naturaleza", "tiempo": 3.5,
      "region": "Altiplano", "descripcion": "Salar impresionante con fauna típica del altiplano.",
-     "imagen": img(".jpg")},
+     "imagen": img("Salar_de_Surire.jpg")},
 ]
 
 
