@@ -65,7 +65,7 @@ destinos = [
      "region": "Costa", "descripcion": "Famosa playa con actividades de pesca y deportes acuáticos.",
      "imagen": img("Playa-Chinchorro.jpg")},
 
- {"nombre": "Humedal del Río Lluta", "lat": -18.42097, "lon": -70.33452, "tipo": "Naturaleza", "tiempo": 2,
+ {"nombre": "Humedal del Río Lluta", "lat": -18.42450, "lon": -70.33400, "tipo": "Naturaleza", "tiempo": 2,
  "region": "Costa", "descripcion": "Humedal costero en la desembocadura del río Lluta, ideal para observación de aves.",
  "imagen": img("Humedal-Rio-Lluta-Region-de-Arica-y-Parinacota.jpg")},
 
@@ -75,7 +75,7 @@ destinos = [
  "imagen": img("Museo arqueologico San Miguel de Azapa.jpg")},
 
 
-    {"nombre": "Valle de Lluta", "lat": -18.43, "lon": -70.32, "tipo": "Naturaleza", "tiempo": 2,
+    {"nombre": "Valle de Lluta", "lat":  -18.40850, "lon": -70.30890, "tipo": "Naturaleza", "tiempo": 2,
      "region": "Valle", "descripcion": "Hermoso valle con agricultura tradicional y paisajes naturales.",
      "imagen": img("Valle de lluta.jpg")},
 
