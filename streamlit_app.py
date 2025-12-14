@@ -139,6 +139,14 @@ def generar_pdf_lujo(itinerario):
     def limpiar_texto(texto):
         return re.sub(r'[^\x00-\x7F]+', ' ', str(texto))
 
+    # Colores internos (no depende de variables globales)
+    colores_region_local = {
+        "Ciudad": "#FFA07A",
+        "Costa": "#87CEEB",
+        "Valle": "#98FB98",
+        "Altiplano": "#DDA0DD"
+    }
+
     def imagen_a_jpg_temp(ruta_o_url):
         """
         Convierte cualquier imagen (local o URL) a JPG RGB compatible con FPDF.
@@ -167,11 +175,10 @@ def generar_pdf_lujo(itinerario):
     # ---------- PORTADA ---------- #
     pdf.add_page()
     pdf.set_font("Arial", "B", 28)
-    pdf.cell(0, 20, "Itinerario Turístico", ln=True, align="C")
+    pdf.cell(0, 20, "Itinerario Turistico", ln=True, align="C")
     pdf.set_font("Arial", "B", 22)
     pdf.cell(0, 15, "Arica y Parinacota", ln=True, align="C")
 
-    # Imagen de portada (primer destino disponible)
     portada_img = None
     for _, lugares in itinerario.items():
         if lugares:
@@ -202,18 +209,19 @@ def generar_pdf_lujo(itinerario):
         pdf.ln(5)
 
         for i, lugar in enumerate(lugares):
-            # Título con color por región
-            color = colores_region.get(lugar.get("region", ""), "#FFFFFF")
+            # Color por región (seguro)
+            region = lugar.get("region", "")
+            color_hex = colores_region_local.get(region, "#FFFFFF")
             pdf.set_fill_color(
-                int(color[1:3], 16),
-                int(color[3:5], 16),
-                int(color[5:7], 16)
+                int(color_hex[1:3], 16),
+                int(color_hex[3:5], 16),
+                int(color_hex[5:7], 16)
             )
 
             pdf.set_font("Arial", "B", 16)
             pdf.multi_cell(
                 0, 8,
-                limpiar_texto(f"{lugar['nombre']} ({lugar['region']})"),
+                limpiar_texto(f"{lugar.get('nombre','')} ({region})"),
                 border=1,
                 fill=True
             )
@@ -231,7 +239,7 @@ def generar_pdf_lujo(itinerario):
             pdf.multi_cell(
                 0, 6,
                 limpiar_texto(
-                    f"{lugar['tipo']} - {lugar['tiempo']} hrs\n{lugar['descripcion']}"
+                    f"{lugar.get('tipo','')} - {lugar.get('tiempo','')} hrs\n{lugar.get('descripcion','')}"
                 )
             )
 
@@ -252,16 +260,12 @@ def generar_pdf_lujo(itinerario):
 
     # ---------- PIE FINAL ---------- #
     pdf.set_font("Arial", "I", 10)
-    pdf.cell(
-        0, 10,
-        "Visita Arica y Parinacota - Naturaleza, cultura y aventura.",
-        ln=True,
-        align="C"
-    )
+    pdf.cell(0, 10, "Visita Arica y Parinacota - Naturaleza, cultura y aventura.", ln=True, align="C")
 
     filename = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
     pdf.output(filename)
     return filename
+
 # ---------- INTERFAZ ---------- #
 st.title("🌅 Guía Turística - Arica y Parinacota")
 st.markdown("Explora la región con itinerarios personalizados por secciones geográficas.")
