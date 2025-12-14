@@ -126,12 +126,45 @@ def generar_itinerario_por_cercania(destinos_seleccionados, dias):
 
     itinerario[f"Día {dia+1}"].append(actual)
     return itinerario
+def generar_link_google_maps_desde_itinerario(itinerario, travelmode="driving"):
+    orden = []
 
-def generar_link_google_maps(destinos_seleccionados):
-    base_url = "https://www.google.com/maps/dir/"
-    for d in destinos_seleccionados:
-        base_url += f"{d['lat']},{d['lon']}/"
-    return base_url
+    # Respeta el orden Día 1, Día 2, ...
+    for dia in itinerario.keys():
+        orden.extend(itinerario[dia])
+
+    if len(orden) < 2:
+        return None
+
+    def coord(d):
+        return f"{d['lat']:.6f},{d['lon']:.6f}"
+
+    origin = coord(orden[0])
+    destination = coord(orden[-1])
+
+    waypoints = [coord(d) for d in orden[1:-1]]
+
+    if len(waypoints) > 23:
+        waypoints = waypoints[:23]
+
+    waypoints_str = ""
+    if waypoints:
+        waypoints_str = "&waypoints=" + "%7C".join(waypoints)
+
+    url = (
+        "https://www.google.com/maps/dir/?api=1"
+        f"&origin={origin}"
+        f"&destination={destination}"
+        f"{waypoints_str}"
+        f"&travelmode={travelmode}"
+        "&dir_action=navigate"
+    )
+
+    return url
+
+
+   
+
 def generar_pdf_lujo(itinerario):
     # ---------- Helpers ---------- #
     def limpiar_texto(texto):
@@ -370,6 +403,11 @@ st.markdown("Explora la región con itinerarios personalizados por secciones geo
 
 st.sidebar.header("🧭 Configura tu viaje")
 dias = st.sidebar.slider("Días de visita", 1, 7, 3)
+modo_viaje = st.sidebar.selectbox(
+    "🚗 Modo de traslado",
+    ["driving", "walking", "transit", "bicycling"],
+    index=0
+)
 
 destinos_seleccionados = []
 
@@ -445,8 +483,17 @@ if destinos_seleccionados:
                     st.markdown(f"📖 {lugar['descripcion']}")
         st.divider()
 
-    ruta_url = generar_link_google_maps(destinos_seleccionados)
-    st.markdown(f"🚗 [Ver ruta completa en Google Maps]({ruta_url})", unsafe_allow_html=True)
+   ruta_url = generar_link_google_maps_desde_itinerario(
+    itinerario,
+    travelmode=modo_viaje
+)
+
+if ruta_url:
+    st.markdown(
+        f"🧭 [Abrir ruta detallada en Google Maps]({ruta_url})",
+        unsafe_allow_html=True
+    )
+
 
     if st.button("📄 Generar PDF de Lujo"):
         pdf_path = generar_pdf_lujo(itinerario)
