@@ -48,7 +48,7 @@ destinos = [
 
     {"nombre": "Playa El Laucho", "lat": -18.486, "lon": -70.318, "tipo": "Playa", "tiempo": 2,
      "region": "Costa", "descripcion": "Playa tranquila ideal para relajarse y tomar sol.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Playa_El_Laucho_Arica.jpg"},
+     "imagen": img(".jpg"},
 
     {"nombre": "Playa La Lisera", "lat": -18.489, "lon": -70.327, "tipo": "Playa", "tiempo": 2,
      "region": "Costa", "descripcion": "Playa muy visitada, ideal para baño y descanso cerca del centro.",
@@ -60,11 +60,11 @@ destinos = [
 
     {"nombre": "Playa Chinchorro", "lat": -18.466, "lon": -70.307, "tipo": "Playa", "tiempo": 2.5,
      "region": "Costa", "descripcion": "Famosa playa con actividades de pesca y deportes acuáticos.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Playa_Chinchorro_Arica.jpg"},
+     "imagen": img(".jpg")},
 
     {"nombre": "Humedal del Río Lluta", "lat": -18.425, "lon": -70.324, "tipo": "Naturaleza", "tiempo": 2,
      "region": "Costa", "descripcion": "Ecosistema protegido, ideal para observación de aves.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Humedal_del_Rio_Lluta_Arica.jpg"},
+     "imagen": img(".jpg")},
 
     {"nombre": "Museo de Azapa", "lat": -18.52, "lon": -70.33, "tipo": "Cultura", "tiempo": 1.5,
      "region": "Valle", "descripcion": "Museo arqueológico con momias y cultura Chinchorro.",
@@ -84,21 +84,19 @@ destinos = [
 
     {"nombre": "La Ex Aduana", "lat": -18.479, "lon": -70.329, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ex_Aduana_Arica.jpg"},
+     "imagen": img(".jpg")},
 
     {"nombre": "Putre", "lat": -18.195, "lon": -69.559, "tipo": "Cultura", "tiempo": 3,
      "region": "Altiplano", "descripcion": "Pueblo tradicional a orillas del altiplano con cultura Aymara.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Putre_village.jpg"},
+     "imagen": img(".jpg")},
 
     {"nombre": "Parque Nacional Lauca", "lat": -18.243, "lon": -69.352, "tipo": "Naturaleza", "tiempo": 4,
      "region": "Altiplano", "descripcion": "Parque con volcanes, lagunas y fauna típica de la zona.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Parque_Nacional_Lauca_Chile.jpg"},
-
-    # ✅ Lago Chungará ELIMINADO
+     "imagen": img(".jpg")},
 
     {"nombre": "Salar de Surire", "lat": -18.85, "lon": -69.05, "tipo": "Naturaleza", "tiempo": 3.5,
      "region": "Altiplano", "descripcion": "Salar impresionante con fauna típica del altiplano.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/74/Salar_de_Surire.jpg"},
+     "imagen": img(".jpg")},
 ]
 
 
