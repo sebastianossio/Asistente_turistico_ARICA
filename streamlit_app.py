@@ -132,98 +132,136 @@ def generar_link_google_maps(destinos_seleccionados):
     for d in destinos_seleccionados:
         base_url += f"{d['lat']},{d['lon']}/"
     return base_url
-
 def generar_pdf_lujo(itinerario):
     pdf = FPDF('P', 'mm', 'A4')
     pdf.set_auto_page_break(auto=True, margin=15)
 
     def limpiar_texto(texto):
-        texto = re.sub(r'[^\x00-\x7F]+', ' ', texto)
-        return texto
+        return re.sub(r'[^\x00-\x7F]+', ' ', str(texto))
 
-    # Portada
+    def imagen_a_jpg_temp(ruta_o_url):
+        """
+        Convierte cualquier imagen (local o URL) a JPG RGB compatible con FPDF.
+        Retorna ruta temporal o None si falla.
+        """
+        try:
+            if isinstance(ruta_o_url, str) and ruta_o_url.startswith("http"):
+                r = requests.get(ruta_o_url, timeout=15)
+                r.raise_for_status()
+                img = Image.open(BytesIO(r.content))
+            else:
+                img = Image.open(ruta_o_url)
+
+            img = img.convert("RGB")
+            img.thumbnail((900, 900))
+
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+            tmp_path = tmp.name
+            tmp.close()
+
+            img.save(tmp_path, "JPEG", quality=85)
+            return tmp_path
+        except:
+            return None
+
+    # ---------- PORTADA ---------- #
     pdf.add_page()
     pdf.set_font("Arial", "B", 28)
     pdf.cell(0, 20, "Itinerario Turístico", ln=True, align="C")
     pdf.set_font("Arial", "B", 22)
     pdf.cell(0, 15, "Arica y Parinacota", ln=True, align="C")
 
-    # Imagen portada (si existe local, la usa; si no, intenta URL)
-    portada_local = img("morro-de-arica-1.jpg")
-    try:
-        if os.path.exists(portada_local):
-            pdf.image(portada_local, x=30, y=60, w=150)
-        else:
-            portada_url = "https://upload.wikimedia.org/wikipedia/commons/2/2c/Morro_de_Arica.jpg"
-            response = requests.get(portada_url, timeout=10)
-            img_pil = Image.open(BytesIO(response.content)).convert("RGB")
-            temp_path = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
-            img_pil.thumbnail((500, 500))
-            img_pil.save(temp_path)
-            pdf.image(temp_path, x=30, y=60, w=150)
-    except:
-        pass
+    # Imagen de portada (primer destino disponible)
+    portada_img = None
+    for _, lugares in itinerario.items():
+        if lugares:
+            portada_img = imagen_a_jpg_temp(lugares[0].get("imagen"))
+            break
+
+    if portada_img:
+        try:
+            pdf.image(portada_img, x=30, y=60, w=150)
+        except:
+            pass
 
     pdf.add_page()
 
-    # Tabla de contenido
+    # ---------- TABLA DE CONTENIDO ---------- #
     pdf.set_font("Arial", "B", 20)
     pdf.cell(0, 10, "Tabla de Contenido", ln=True)
     pdf.ln(5)
     pdf.set_font("Arial", "", 14)
     for idx, dia in enumerate(itinerario.keys()):
-        pdf.cell(0, 8, f"{idx+1}. {dia}", ln=True)
+        pdf.cell(0, 8, f"{idx+1}. {limpiar_texto(dia)}", ln=True)
     pdf.add_page()
 
-    # Itinerario por día
+    # ---------- ITINERARIO ---------- #
     for dia, lugares in itinerario.items():
         pdf.set_font("Arial", "B", 20)
         pdf.cell(0, 10, limpiar_texto(dia), ln=True)
         pdf.ln(5)
 
-        for lugar in lugares:
-            color = colores_region.get(lugar["region"], "#FFFFFF")
-            pdf.set_fill_color(int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16))
+        for i, lugar in enumerate(lugares):
+            # Título con color por región
+            color = colores_region.get(lugar.get("region", ""), "#FFFFFF")
+            pdf.set_fill_color(
+                int(color[1:3], 16),
+                int(color[3:5], 16),
+                int(color[5:7], 16)
+            )
+
             pdf.set_font("Arial", "B", 16)
-            pdf.multi_cell(0, 8, limpiar_texto(f"{lugar['nombre']} ({lugar['region']})"), border=1, fill=True)
+            pdf.multi_cell(
+                0, 8,
+                limpiar_texto(f"{lugar['nombre']} ({lugar['region']})"),
+                border=1,
+                fill=True
+            )
 
-            # Imagen (local o URL)
-            try:
-                if isinstance(lugar["imagen"], str) and lugar["imagen"].startswith("http"):
-                    response = requests.get(lugar["imagen"], timeout=10)
-                    img_pil = Image.open(BytesIO(response.content)).convert("RGB")
-                    temp_path = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
-                    img_pil.thumbnail((400, 400))
-                    img_pil.save(temp_path)
-                    pdf.image(temp_path, w=120)
-                else:
-                    if os.path.exists(lugar["imagen"]):
-                        pdf.image(lugar["imagen"], w=120)
-            except:
-                pass
+            # Imagen del destino
+            img_temp = imagen_a_jpg_temp(lugar.get("imagen"))
+            if img_temp:
+                try:
+                    pdf.image(img_temp, w=120)
+                except:
+                    pass
 
+            # Descripción
             pdf.set_font("Arial", "", 12)
-            pdf.multi_cell(0, 6, limpiar_texto(f"{lugar['tipo']} - {lugar['tiempo']} hrs\n{lugar['descripcion']}"))
-            pdf.ln(2)
+            pdf.multi_cell(
+                0, 6,
+                limpiar_texto(
+                    f"{lugar['tipo']} - {lugar['tiempo']} hrs\n{lugar['descripcion']}"
+                )
+            )
 
-            idx_actual = lugares.index(lugar)
-            if idx_actual < len(lugares) - 1:
-                dist = geodesic(
-                    (lugar["lat"], lugar["lon"]),
-                    (lugares[idx_actual + 1]["lat"], lugares[idx_actual + 1]["lon"])
-                ).km
-                pdf.multi_cell(0, 6, f"Distancia al siguiente: {dist:.1f} km")
+            # Distancia al siguiente
+            if i < len(lugares) - 1:
+                try:
+                    dist = geodesic(
+                        (lugar["lat"], lugar["lon"]),
+                        (lugares[i + 1]["lat"], lugares[i + 1]["lon"])
+                    ).km
+                    pdf.multi_cell(0, 6, f"Distancia al siguiente: {dist:.1f} km")
+                except:
+                    pass
+
             pdf.ln(5)
 
         pdf.add_page()
 
+    # ---------- PIE FINAL ---------- #
     pdf.set_font("Arial", "I", 10)
-    pdf.cell(0, 10, "Visita Arica y Parinacota - Naturaleza, cultura y aventura.", ln=True, align="C")
+    pdf.cell(
+        0, 10,
+        "Visita Arica y Parinacota - Naturaleza, cultura y aventura.",
+        ln=True,
+        align="C"
+    )
 
     filename = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
     pdf.output(filename)
     return filename
-
 # ---------- INTERFAZ ---------- #
 st.title("🌅 Guía Turística - Arica y Parinacota")
 st.markdown("Explora la región con itinerarios personalizados por secciones geográficas.")
