@@ -382,7 +382,7 @@ destinos = [
 
     {"nombre": "Catedral de San Marcos", "lat": -18.47897, "lon": -70.32072, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Imponente catedral del centro de Arica, arquitectura neoclásica.",
-     "imagen": img("Catedral-San-Marcos.jpeg")},
+     "imagen": img("Catedral-San-Marcos.jpg")},
 
     {"nombre": "La Ex Aduana", "lat": -18.477185, "lon": -70.321130, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
