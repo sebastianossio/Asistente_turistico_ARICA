@@ -47,7 +47,7 @@ destinos = [
  "imagen": img("morro-de-arica-1.jpg")},
 
 
-    {"nombre": "Playa El Laucho", "lat": -18.48395, "lon": -70.32085, "tipo": "Playa", "tiempo": 2,
+    {"nombre": "Playa El Laucho", "lat": -18.488000, "lon": -70.327320, "tipo": "Playa", "tiempo": 2,
      "region": "Costa", "descripcion": "Playa tranquila ideal para relajarse y tomar sol.",
      "imagen": img("Playa el Laucho.jpg")},
 
@@ -89,7 +89,7 @@ destinos = [
  "imagen": img("Catedral-San-Marcos.jpg")},
 
 
-    {"nombre": "La Ex Aduana", "lat": -18.47910, "lon": -70.32230, "tipo": "Cultura", "tiempo": 1,
+    {"nombre": "La Ex Aduana", "lat": -18.477185, "lon":-70.321130, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
      "imagen": img("Ex-Aduana-Casa-de-la-Cultura-Arica.jpg")},
 
