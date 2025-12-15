@@ -295,7 +295,7 @@ destinos = [
 
     {"nombre": "Playa El Laucho", "lat": -18.488000, "lon": -70.327320, "tipo": "Playa", "tiempo": 2,
      "region": "Costa", "descripcion": "Playa tranquila ideal para relajarse y tomar sol.",
-     "imagen": img("Playa_El_Laucho.jpg")},
+     "imagen": img("Playa el Laucho.jpg")},
 
     {"nombre": "Playa La Lisera", "lat": -18.49303, "lon": -70.32565, "tipo": "Playa", "tiempo": 2,
      "region": "Costa", "descripcion": "Playa muy visitada, ideal para baño y descanso cerca del centro.",
@@ -307,7 +307,7 @@ destinos = [
 
     {"nombre": "Humedal del Río Lluta", "lat": -18.425, "lon": -70.324, "tipo": "Naturaleza", "tiempo": 2,
      "region": "Costa", "descripcion": "Ecosistema protegido, ideal para observación de aves.",
-     "imagen": img("Humedal_Rio_Lluta.jpg")},
+     "imagen": img("Humedal-Rio-Lluta-Region-de-Arica-y-Parinacota.jpg")},
 
     {"nombre": "Museo de Azapa", "lat": -18.516474, "lon": -70.181149, "tipo": "Cultura", "tiempo": 1.5,
      "region": "Valle", "descripcion": "Museo arqueológico con momias y cultura Chinchorro.",
@@ -323,11 +323,11 @@ destinos = [
 
     {"nombre": "Catedral de San Marcos", "lat": -18.47897, "lon": -70.32072, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Imponente catedral del centro de Arica, arquitectura neoclásica.",
-     "imagen": img("Catedral de San Marcos.jpeg")},
+     "imagen": img("Catedral-San-Marcos.jpeg")},
 
     {"nombre": "La Ex Aduana", "lat": -18.477185, "lon": -70.321130, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
-     "imagen": img("Ex Aduana.jpg")},
+     "imagen": img("Ex-Aduana-Casa-de-la-Cultura-Arica.jpg")},
 
     {"nombre": "Putre", "lat": -18.195, "lon": -69.559, "tipo": "Cultura", "tiempo": 3,
      "region": "Altiplano", "descripcion": "Pueblo tradicional a orillas del altiplano con cultura Aymara.",
@@ -339,7 +339,7 @@ destinos = [
 
     {"nombre": "Salar de Surire", "lat": -18.85, "lon": -69.05, "tipo": "Naturaleza", "tiempo": 3.5,
      "region": "Altiplano", "descripcion": "Salar impresionante con fauna típica del altiplano.",
-     "imagen": img("Salar de Surire.jpg")},
+     "imagen": img("Salar_de_Surire.jpg")},
 ]
 
 
