@@ -641,27 +641,34 @@ st.sidebar.divider()
 st.sidebar.subheader(t("currency_title"))
 
 monto = st.sidebar.number_input(t("amount_label"), min_value=0.0, value=100.0, step=10.0)
+
+# Lista de monedas soportadas (incluye ARS y CLP) :contentReference[oaicite:3]{index=3}
+codigos = monedas_disponibles()
+
+# Sugerencia: deja un set acotado + opción "Ver todas"
+ver_todas = st.sidebar.checkbox("Ver todas las monedas", value=False)
+if not ver_todas:
+    preferidas = ["CLP", "USD", "EUR", "BRL", "ARS"]
+    codigos_ui = [c for c in preferidas if c in codigos]
+else:
+    codigos_ui = codigos
+
 c1, c2 = st.sidebar.columns(2)
 with c1:
-    moneda_origen = st.selectbox(t("from_label"), ["CLP", "USD", "EUR", "BRL", "ARS"], index=0)
+    moneda_origen = st.selectbox(t("from_label"), codigos_ui, index=codigos_ui.index("USD") if "USD" in codigos_ui else 0)
 with c2:
-    moneda_destino = st.selectbox(t("to_label"), ["CLP", "USD", "EUR", "BRL", "ARS"], index=1)
-
+    # evita que por defecto quede igual
+    idx_default = codigos_ui.index("CLP") if "CLP" in codigos_ui else (1 if len(codigos_ui) > 1 else 0)
+    moneda_destino = st.selectbox(t("to_label"), codigos_ui, index=idx_default)
 if st.sidebar.button(t("convert_btn")):
     try:
-        if moneda_origen == moneda_destino:
-            tasa = 1.0
-            convertido = monto
-        else:
-            tasa = obtener_tasa_frankfurter(moneda_origen, moneda_destino)
-            convertido = monto * tasa
-
+        convertido, detalle = convertir_divisa(monto, moneda_origen, moneda_destino)
         st.sidebar.success(
-            f"{t('result_label')}: {monto:,.2f} {moneda_origen} → {convertido:,.2f} {moneda_destino}\n"
-            f"{t('rate_label')}: 1 {moneda_origen} = {tasa:.6f} {moneda_destino}"
+            f"{t('result_label')}: {monto:,.2f} {moneda_origen} → {convertido:,.2f} {moneda_destino}\n{detalle}"
         )
-    except Exception:
-        st.sidebar.error(t("currency_error"))
+    except Exception as e:
+        st.sidebar.error(f"{t('currency_error')}\n\nDetalle: {e}")
+        st.sidebar.caption("Rates by Exchange Rate API (open access)")
 
 # Título principal
 st.title(t("app_title"))
