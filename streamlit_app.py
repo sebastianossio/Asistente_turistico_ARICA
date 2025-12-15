@@ -335,7 +335,7 @@ destinos = [
 
     {"nombre": "Parque Nacional Lauca", "lat": -18.243, "lon": -69.352, "tipo": "Naturaleza", "tiempo": 4,
      "region": "Altiplano", "descripcion": "Parque con volcanes, lagunas y fauna típica de la zona.",
-     "imagen": img("Parque Nacional Lauca.jpg")},
+     "imagen": img("Parque nacional Lauca.jpg")},
 
     {"nombre": "Salar de Surire", "lat": -18.85, "lon": -69.05, "tipo": "Naturaleza", "tiempo": 3.5,
      "region": "Altiplano", "descripcion": "Salar impresionante con fauna típica del altiplano.",
