@@ -1,7 +1,5 @@
 import streamlit as st
-import os
 from pathlib import Path
-
 from geopy.distance import geodesic
 from fpdf import FPDF
 import math
@@ -11,10 +9,19 @@ import requests
 from PIL import Image
 from io import BytesIO
 import tempfile
-import re
 import datetime
 
-# ---------- i18n (TRADUCCIÓN TOTAL DE LA APP) ---------- #
+# =========================
+# CONFIG
+# =========================
+st.set_page_config(page_title="Asistente Turístico - Arica", layout="wide")
+
+BASE_DIR = Path(__file__).resolve().parent
+IMAGES_DIR = BASE_DIR / "images"
+
+# =========================
+# i18n (TRADUCCIÓN TOTAL)
+# =========================
 I18N = {
     "Español": {
         "app_title": "🌅 Guía Turística - Arica y Parinacota",
@@ -51,8 +58,13 @@ I18N = {
         "select_at_least_one": "Selecciona al menos un atractivo turístico para generar tu itinerario.",
 
         "hours": "hrs",
+        "distance_next": "Distancia al siguiente",
+        "recommendation": "Recomendación: sigue el orden propuesto para reducir traslados.",
+        "footer_tagline": "Naturaleza • Cultura • Aventura",
+        "generated_on": "Generado el",
+        "good_trip": "¡Buen viaje!",
+        "auto_summary": "Este itinerario fue generado automáticamente en base a los destinos seleccionados y un criterio de cercanía.",
     },
-
     "English": {
         "app_title": "🌅 Tourist Guide - Arica & Parinacota",
         "app_subtitle": "Explore the region with personalized itineraries by area.",
@@ -88,8 +100,13 @@ I18N = {
         "select_at_least_one": "Select at least one place to generate your itinerary.",
 
         "hours": "hrs",
+        "distance_next": "Distance to next",
+        "recommendation": "Tip: follow the suggested order to reduce travel time.",
+        "footer_tagline": "Nature • Culture • Adventure",
+        "generated_on": "Generated on",
+        "good_trip": "Have a great trip!",
+        "auto_summary": "This itinerary was generated automatically based on your selected places and a proximity rule.",
     },
-
     "Português": {
         "app_title": "🌅 Guia Turístico - Arica e Parinacota",
         "app_subtitle": "Explore a região com roteiros personalizados por área.",
@@ -125,24 +142,84 @@ I18N = {
         "select_at_least_one": "Selecione pelo menos um lugar para gerar o roteiro.",
 
         "hours": "hrs",
+        "distance_next": "Distância para o próximo",
+        "recommendation": "Dica: siga a ordem sugerida para reduzir deslocamentos.",
+        "footer_tagline": "Natureza • Cultura • Aventura",
+        "generated_on": "Gerado em",
+        "good_trip": "Boa viagem!",
+        "auto_summary": "Este roteiro foi gerado automaticamente com base nos locais selecionados e um critério de proximidade.",
+    },
+}
+
+REGION_MAP = {
+    "Español": {"Ciudad": "Ciudad", "Costa": "Costa", "Valle": "Valle", "Altiplano": "Altiplano"},
+    "English": {"Ciudad": "City", "Costa": "Coast", "Valle": "Valley", "Altiplano": "Highlands"},
+    "Português": {"Ciudad": "Cidade", "Costa": "Costa", "Valle": "Vale", "Altiplano": "Altiplano"},
+}
+TYPE_MAP = {
+    "Español": {"Cultura": "Cultura", "Playa": "Playa", "Naturaleza": "Naturaleza"},
+    "English": {"Cultura": "Culture", "Playa": "Beach", "Naturaleza": "Nature"},
+    "Português": {"Cultura": "Cultura", "Playa": "Praia", "Naturaleza": "Natureza"},
+}
+
+DESC_I18N = {
+    "Morro de Arica": {
+        "English": "Historic landmark with panoramic views of the city and coastline.",
+        "Português": "Marco histórico com vista panorâmica da cidade e do litoral.",
+    },
+    "Cuevas de Anzota": {
+        "English": "Coastal caves and rock formations along a scenic seaside trail.",
+        "Português": "Grutas costeiras e formações rochosas em uma trilha cênica à beira-mar.",
+    },
+    "Museo de Azapa": {
+        "English": "Archaeological museum featuring Chinchorro heritage and ancient artifacts.",
+        "Português": "Museu arqueológico com patrimônio Chinchorro e artefatos antigos.",
+    },
+    "Valle de Lluta": {
+        "English": "Traditional agricultural valley with rural scenery and local culture.",
+        "Português": "Vale agrícola tradicional com paisagens rurais e cultura local.",
+    },
+    "Valle de Azapa": {
+        "English": "Cultural and agricultural valley known for local products and heritage.",
+        "Português": "Vale cultural e agrícola conhecido por produtos locais e patrimônio.",
+    },
+    "Catedral de San Marcos": {
+        "English": "Historic cathedral in the city center, a key landmark in Arica.",
+        "Português": "Catedral histórica no centro da cidade, um marco importante de Arica.",
+    },
+    "Playa El Laucho": {
+        "English": "Calm beach near the city—great for relaxing and swimming.",
+        "Português": "Praia tranquila perto da cidade—ideal para relaxar e nadar.",
+    },
+    "Playa La Lisera": {
+        "English": "Popular beach close to downtown, ideal for a beach day.",
+        "Português": "Praia popular perto do centro, ideal para passar o dia.",
+    },
+    "Humedal del Río Lluta": {
+        "English": "Coastal wetland ideal for birdwatching and nature observation.",
+        "Português": "Área úmida costeira ideal para observação de aves e natureza.",
+    },
+    "La Ex Aduana": {
+        "English": "Historic customs building and landmark near the waterfront area.",
+        "Português": "Antiga alfândega histórica e ponto turístico perto da orla.",
+    },
+    "Putre": {
+        "English": "Andean town with Aymara culture, high-altitude landscapes and tradition.",
+        "Português": "Cidade andina com cultura Aymara, paisagens de altitude e tradição.",
+    },
+    "Parque Nacional Lauca": {
+        "English": "National park with volcanoes, lagoons and unique highland wildlife.",
+        "Português": "Parque nacional com vulcões, lagoas e fauna típica do altiplano.",
+    },
+    "Salar de Surire": {
+        "English": "Highland salt flat known for wildlife and striking landscapes.",
+        "Português": "Salar do altiplano conhecido pela fauna e paisagens impressionantes.",
     },
 }
 
 def t(key: str) -> str:
     lang = st.session_state.get("lang", "Español")
     return I18N.get(lang, I18N["Español"]).get(key, key)
-
-# Traducción de etiquetas (sin tocar tu lista destinos)
-REGION_MAP = {
-    "Español": {"Ciudad":"Ciudad","Costa":"Costa","Valle":"Valle","Altiplano":"Altiplano"},
-    "English": {"Ciudad":"City","Costa":"Coast","Valle":"Valley","Altiplano":"Highlands"},
-    "Português": {"Ciudad":"Cidade","Costa":"Costa","Valle":"Vale","Altiplano":"Altiplano"},
-}
-TYPE_MAP = {
-    "Español": {"Cultura":"Cultura","Playa":"Playa","Naturaleza":"Naturaleza"},
-    "English": {"Cultura":"Culture","Playa":"Beach","Naturaleza":"Nature"},
-    "Português": {"Cultura":"Cultura","Playa":"Praia","Naturaleza":"Natureza"},
-}
 
 def tr_region(valor: str) -> str:
     lang = st.session_state.get("lang", "Español")
@@ -152,178 +229,121 @@ def tr_type(valor: str) -> str:
     lang = st.session_state.get("lang", "Español")
     return TYPE_MAP.get(lang, TYPE_MAP["Español"]).get(valor, valor)
 
-# ---------- TRADUCCIÓN DE DESCRIPCIONES (por nombre de destino) ---------- #
-# Clave: nombre EXACTO del destino (tal como está en tu lista destinos)
-DESC_I18N = {
-    "Morro de Arica": {
-        "English": "Historic landmark with panoramic views of the city and coastline.",
-        "Português": "Marco histórico com vista panorâmica da cidade e do litoral."
-    },
-    "Cuevas de Anzota": {
-        "English": "Coastal caves and rock formations along a scenic seaside trail.",
-        "Português": "Grutas costeiras e formações rochosas em uma trilha cênica à beira-mar."
-    },
-    "Museo de Azapa": {
-        "English": "Archaeological museum featuring Chinchorro heritage and ancient artifacts.",
-        "Português": "Museu arqueológico com patrimônio Chinchorro e artefatos antigos."
-    },
-    "Valle de Lluta": {
-        "English": "Traditional agricultural valley with rural scenery and local culture.",
-        "Português": "Vale agrícola tradicional com paisagens rurais e cultura local."
-    },
-    "Valle de Azapa": {
-        "English": "Cultural and agricultural valley known for local products and heritage.",
-        "Português": "Vale cultural e agrícola conhecido por produtos locais e patrimônio."
-    },
-    "Catedral de San Marcos": {
-        "English": "Historic cathedral in the city center, a key landmark in Arica.",
-        "Português": "Catedral histórica no centro da cidade, um marco importante de Arica."
-    },
-    "Playa El Laucho": {
-        "English": "Calm beach near the city—great for relaxing and swimming.",
-        "Português": "Praia tranquila perto da cidade—ideal para relaxar e nadar."
-    },
-    "Playa La Lisera": {
-        "English": "Popular beach close to downtown, ideal for a beach day.",
-        "Português": "Praia popular perto do centro, ideal para passar o dia."
-    },
-    "Humedal del Río Lluta": {
-        "English": "Coastal wetland ideal for birdwatching and nature observation.",
-        "Português": "Área úmida costeira ideal para observação de aves e natureza."
-    },
-    "La Ex Aduana": {
-        "English": "Historic customs building and landmark near the waterfront area.",
-        "Português": "Antiga alfândega histórica e ponto turístico perto da orla."
-    },
-    "Putre": {
-        "English": "Andean town with Aymara culture, high-altitude landscapes and tradition.",
-        "Português": "Cidade andina com cultura Aymara, paisagens de altitude e tradição."
-    },
-    "Parque Nacional Lauca": {
-        "English": "National park with volcanoes, lagoons and unique highland wildlife.",
-        "Português": "Parque nacional com vulcões, lagoas e fauna típica do altiplano."
-    },
-    "Salar de Surire": {
-        "English": "Highland salt flat known for wildlife and striking landscapes.",
-        "Português": "Salar do altiplano conhecido pela fauna e paisagens impressionantes."
-    }
-}
-
 def tr_desc(nombre: str, descripcion_original: str) -> str:
     lang = st.session_state.get("lang", "Español")
     if lang == "Español":
         return descripcion_original
     return DESC_I18N.get(nombre, {}).get(lang, descripcion_original)
 
-
-# ---------- CONFIGURACIÓN ---------- #
-st.set_page_config(page_title="App Turística - Arica y Parinacota", layout="wide")
-
-# ---------- RUTAS DE IMÁGENES LOCALES (GitHub) ---------- #
-BASE_DIR = Path(__file__).resolve().parent
-
-def img(filename: str) -> str:
-    """Devuelve la ruta absoluta a una imagen dentro de /images.
-    Si no existe, avisa para detectar errores en GitHub/Streamlit Cloud.
-    """
-    path = BASE_DIR / "images" / filename
-    if not path.exists():
-        st.warning(f"⚠️ Falta imagen en repo: images/{filename}")
-    return str(path)
-
-def cargar_imagen_para_ui(path_or_url: str):
-    """Carga imagen para UI. Soporta ruta local o URL."""
-    try:
-        if path_or_url.startswith("http"):
-            r = requests.get(path_or_url, timeout=10)
-            r.raise_for_status()
-            return Image.open(BytesIO(r.content)).convert("RGB")
-        else:
-            return Image.open(path_or_url).convert("RGB")
-    except:
-        return None
-
-# ---------- DATOS DE DESTINOS ---------- #
-destinos = [
-   {"nombre": "Morro de Arica", "lat": -18.47962, "lon": -70.32394, "tipo": "Cultura", "tiempo": 1.5,
- "region": "Ciudad", "descripcion": "Cerro histórico con vistas panorámicas de la ciudad.",
- "imagen": img("morro-de-arica-1.jpg")},
-
-
-    {"nombre": "Playa El Laucho", "lat": -18.488000, "lon": -70.327320, "tipo": "Playa", "tiempo": 2,
-     "region": "Costa", "descripcion": "Playa tranquila ideal para relajarse y tomar sol.",
-     "imagen": img("Playa el Laucho.jpg")},
-
-  {"nombre": "Playa La Lisera", "lat": -18.49303, "lon": -70.32565, "tipo": "Playa", "tiempo": 2,
- "region": "Costa", "descripcion": "Playa popular con arena blanca y aguas tranquilas.",
- "imagen": img("Playa-La-Lisera-Arica.jpg")},
-
-
-  {"nombre": "Cuevas de Anzota", "lat": -18.549914, "lon": -70.331249, "tipo": "Naturaleza", "tiempo": 1.5,
- "region": "Costa", "descripcion": "Cuevas naturales con formaciones rocosas únicas en la costa de Arica.",
- "imagen": img("Cuevas de Anzota.jpg")},
-
-
-    {"nombre": "Playa Chinchorro", "lat": -18.466, "lon": -70.307, "tipo": "Playa", "tiempo": 2.5,
-     "region": "Costa", "descripcion": "Famosa playa con actividades de pesca y deportes acuáticos.",
-     "imagen": img("Playa-Chinchorro.jpg")},
-
- {"nombre": "Humedal del Río Lluta", "lat": -18.40683, "lon": -70.32890, "tipo": "Naturaleza", "tiempo": 2,
- "region": "Costa", "descripcion": "Humedal costero en la desembocadura del río Lluta, ideal para observación de aves.",
- "imagen": img("Humedal-Rio-Lluta-Region-de-Arica-y-Parinacota.jpg")},
-
-
-  {"nombre": "Museo de Azapa", "lat": -18.516474, "lon": -70.181149, "tipo": "Cultura", "tiempo": 1.5,
- "region": "Valle", "descripcion": "Museo arqueológico con momias y artefactos prehispánicos.",
- "imagen": img("Museo arqueologico San Miguel de Azapa.jpg")},
-
-
-    {"nombre": "Valle de Lluta", "lat":  -18.40130, "lon": -70.30010, "tipo": "Naturaleza", "tiempo": 2,
-     "region": "Valle", "descripcion": "Hermoso valle con agricultura tradicional y paisajes naturales.",
-     "imagen": img("Valle de lluta.jpg")},
-
-   {"nombre": "Valle de Azapa", "lat": -18.51690, "lon": -70.18230, "tipo": "Naturaleza", "tiempo": 2,
- "region": "Valle", "descripcion": "Valle reconocido por su paisaje, cultura y agricultura local.",
- "imagen": img("Valle de Azapa.jpeg")},
-
-
-   {"nombre": "Catedral de San Marcos", "lat": -18.47897, "lon": -70.32072, "tipo": "Cultura", "tiempo": 1,
- "region": "Ciudad", "descripcion": "Catedral histórica diseñada por Gustave Eiffel.",
- "imagen": img("Catedral-San-Marcos.jpg")},
-
-
-    {"nombre": "La Ex Aduana", "lat": -18.477185, "lon":-70.321130, "tipo": "Cultura", "tiempo": 1,
-     "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
-     "imagen": img("Ex-Aduana-Casa-de-la-Cultura-Arica.jpg")},
-
-    {"nombre": "Putre", "lat": -18.195, "lon": -69.559, "tipo": "Cultura", "tiempo": 3,
-     "region": "Altiplano", "descripcion": "Pueblo tradicional a orillas del altiplano con cultura Aymara.",
-     "imagen": img("Putre.jpg")},
-
-    {"nombre": "Parque Nacional Lauca", "lat": -18.243, "lon": -69.352, "tipo": "Naturaleza", "tiempo": 4,
-     "region": "Altiplano", "descripcion": "Parque con volcanes, lagunas y fauna típica de la zona.",
-     "imagen": img("Parque nacional Lauca.jpg")},
-
-    {"nombre": "Salar de Surire", "lat": -18.85, "lon": -69.05, "tipo": "Naturaleza", "tiempo": 3.5,
-     "region": "Altiplano", "descripcion": "Salar impresionante con fauna típica del altiplano.",
-     "imagen": img("Salar_de_Surire.jpg")},
-]
-
-
-
-# ---------- FUNCIONES ---------- #
-@st.cache_data(ttl=60 * 60)  # cache 1 hora
+# =========================
+# DIVISAS (Frankfurter)
+# =========================
+@st.cache_data(ttl=60 * 60)
 def obtener_tasa_frankfurter(moneda_origen: str, moneda_destino: str) -> float:
-    """
-    Devuelve la tasa de cambio moneda_origen -> moneda_destino usando Frankfurter.
-    Frankfurter usa base EUR por defecto, por eso pedimos amount=1&from=XXX&to=YYY.
-    """
     url = f"https://api.frankfurter.dev/v1/latest?amount=1&from={moneda_origen}&to={moneda_destino}"
     r = requests.get(url, timeout=15)
     r.raise_for_status()
     data = r.json()
     return float(data["rates"][moneda_destino])
 
+# =========================
+# IMÁGENES (URL o local)
+# =========================
+LOCAL_IMAGE_BY_NAME = {
+    "Morro de Arica": "morro-de-arica-1.jpg",
+    "Cuevas de Anzota": "Cuevas de Anzota.jpg",
+    "Museo de Azapa": "Museo arqueologico San Miguel de Azapa.jpg",
+    "Valle de Lluta": "Valle de lluta.jpg",
+    "Valle de Azapa": "Valle de Azapa.jpeg",
+    "Catedral de San Marcos": "Catedral de San Marcos.jpeg",
+    "Playa La Lisera": "Playa-La-Lisera-Arica.jpg",
+}
+
+def image_override_path(nombre: str):
+    fn = LOCAL_IMAGE_BY_NAME.get(nombre)
+    if not fn:
+        return None
+    p = IMAGES_DIR / fn
+    return str(p) if p.exists() else None
+
+def cargar_imagen_para_ui(lugar: dict):
+    ref = image_override_path(lugar.get("nombre", "")) or lugar.get("imagen", "")
+    try:
+        if isinstance(ref, str) and ref.startswith("http"):
+            r = requests.get(ref, timeout=12)
+            r.raise_for_status()
+            return Image.open(BytesIO(r.content)).convert("RGB")
+        return Image.open(ref).convert("RGB")
+    except:
+        return None
+
+# =========================
+# DATOS (DESTINOS)
+# =========================
+# Nota: Mantengo tu estructura y campo 'imagen'. (Solo actualicé coordenadas que ya venías corrigiendo contigo.)
+destinos = [
+    {"nombre": "Morro de Arica", "lat": -18.47962, "lon": -70.32394, "tipo": "Cultura", "tiempo": 1.5,
+     "region": "Ciudad", "descripcion": "Icono histórico con vista panorámica de la ciudad.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Morro_de_Arica.jpg"},
+
+    {"nombre": "Playa El Laucho", "lat": -18.488000, "lon": -70.327320, "tipo": "Playa", "tiempo": 2,
+     "region": "Costa", "descripcion": "Playa tranquila ideal para relajarse y tomar sol.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Playa_El_Laucho_Arica.jpg"},
+
+    {"nombre": "Playa La Lisera", "lat": -18.49303, "lon": -70.32565, "tipo": "Playa", "tiempo": 2,
+     "region": "Costa", "descripcion": "Playa muy visitada, ideal para baño y descanso cerca del centro.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Playa_La_Lisera_Arica.jpg"},
+
+    {"nombre": "Cuevas de Anzota", "lat": -18.549914, "lon": -70.331249, "tipo": "Naturaleza", "tiempo": 1.5,
+     "region": "Costa", "descripcion": "Cuevas naturales con formaciones rocosas únicas.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/5/58/Cuevas_de_Anzota.jpg"},
+
+    {"nombre": "Playa Chinchorro", "lat": -18.466, "lon": -70.307, "tipo": "Playa", "tiempo": 2.5,
+     "region": "Costa", "descripcion": "Famosa playa con actividades de pesca y deportes acuáticos.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Playa_Chinchorro_Arica.jpg"},
+
+    {"nombre": "Humedal del Río Lluta", "lat": -18.425, "lon": -70.324, "tipo": "Naturaleza", "tiempo": 2,
+     "region": "Costa", "descripcion": "Ecosistema protegido, ideal para observación de aves.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Humedal_del_Rio_Lluta_Arica.jpg"},
+
+    {"nombre": "Museo de Azapa", "lat": -18.516474, "lon": -70.181149, "tipo": "Cultura", "tiempo": 1.5,
+     "region": "Valle", "descripcion": "Museo arqueológico con momias y cultura Chinchorro.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/74/Museo_Arqueologico_San_Miguel_de_Azapa.JPG"},
+
+    {"nombre": "Valle de Lluta", "lat": -18.43, "lon": -70.32, "tipo": "Naturaleza", "tiempo": 2,
+     "region": "Valle", "descripcion": "Hermoso valle con agricultura tradicional y paisajes naturales.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/1/12/Valle_de_Lluta.jpg"},
+
+    {"nombre": "Valle de Azapa", "lat": -18.51690, "lon": -70.18230, "tipo": "Naturaleza", "tiempo": 2,
+     "region": "Valle", "descripcion": "Valle destacado por su agricultura y patrimonio cultural.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Valle_de_Azapa.jpg"},
+
+    {"nombre": "Catedral de San Marcos", "lat": -18.47897, "lon": -70.32072, "tipo": "Cultura", "tiempo": 1,
+     "region": "Ciudad", "descripcion": "Imponente catedral del centro de Arica, arquitectura neoclásica.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/0/02/Catedral_de_San_Marcos_Arica.jpg"},
+
+    {"nombre": "La Ex Aduana", "lat": -18.477185, "lon": -70.321130, "tipo": "Cultura", "tiempo": 1,
+     "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ex_Aduana_Arica.jpg"},
+
+    {"nombre": "Putre", "lat": -18.195, "lon": -69.559, "tipo": "Cultura", "tiempo": 3,
+     "region": "Altiplano", "descripcion": "Pueblo tradicional a orillas del altiplano con cultura Aymara.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Putre_village.jpg"},
+
+    {"nombre": "Parque Nacional Lauca", "lat": -18.243, "lon": -69.352, "tipo": "Naturaleza", "tiempo": 4,
+     "region": "Altiplano", "descripcion": "Parque con volcanes, lagunas y fauna típica de la zona.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Parque_Nacional_Lauca_Chile.jpg"},
+
+    # Lago Chungará eliminado (como pediste antes)
+
+    {"nombre": "Salar de Surire", "lat": -18.85, "lon": -69.05, "tipo": "Naturaleza", "tiempo": 3.5,
+     "region": "Altiplano", "descripcion": "Salar impresionante con fauna típica del altiplano.",
+     "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/74/Salar_de_Surire.jpg"},
+]
+
+# =========================
+# FUNCIONES: Itinerario + Google Maps
+# =========================
 def calcular_distancia(d1, d2):
     return geodesic((d1["lat"], d1["lon"]), (d2["lat"], d2["lon"])).km
 
@@ -341,17 +361,15 @@ def generar_itinerario_por_cercania(destinos_seleccionados, dias):
         if len(itinerario[f"Día {dia+1}"]) >= math.ceil(len(destinos_seleccionados) / dias):
             dia = (dia + 1) % dias
 
-        if pendientes:
-            siguiente = min(pendientes, key=lambda x: calcular_distancia(actual, x))
-            pendientes.remove(siguiente)
-            actual = siguiente
+        siguiente = min(pendientes, key=lambda x: calcular_distancia(actual, x))
+        pendientes.remove(siguiente)
+        actual = siguiente
 
     itinerario[f"Día {dia+1}"].append(actual)
     return itinerario
+
 def generar_link_google_maps_desde_itinerario(itinerario, travelmode="driving"):
     orden = []
-
-    # Respeta el orden Día 1, Día 2, ...
     for dia in itinerario.keys():
         orden.extend(itinerario[dia])
 
@@ -363,7 +381,6 @@ def generar_link_google_maps_desde_itinerario(itinerario, travelmode="driving"):
 
     origin = coord(orden[0])
     destination = coord(orden[-1])
-
     waypoints = [coord(d) for d in orden[1:-1]]
 
     if len(waypoints) > 23:
@@ -381,54 +398,47 @@ def generar_link_google_maps_desde_itinerario(itinerario, travelmode="driving"):
         f"&travelmode={travelmode}"
         "&dir_action=navigate"
     )
-
     return url
 
-
-   
-
-def generar_pdf_lujo(itinerario):
-    # ---------- Helpers ---------- #
+# =========================
+# PDF (Diseño Pro + Fotos)
+# =========================
+def generar_pdf_lujo(itinerario, lang):
     def limpiar_texto(texto):
-        # FPDF clásico no soporta Unicode: convertimos a latin-1 compatible
         if texto is None:
             return ""
         return str(texto).encode("latin-1", "ignore").decode("latin-1")
 
     colores_region_local = {
-        "Ciudad":   "#FFB199",
-        "Costa":    "#9AD9FF",
-        "Valle":    "#A6F3A6",
-        "Altiplano":"#E0B3FF",
+        "Ciudad": "#FFB199",
+        "Costa": "#9AD9FF",
+        "Valle": "#A6F3A6",
+        "Altiplano": "#E0B3FF",
     }
 
     def hex_to_rgb(h):
         h = h.lstrip("#")
         return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
 
-    def imagen_a_jpg_temp(ruta_o_url):
-        """Convierte cualquier imagen (local o URL) a JPG RGB compatible con FPDF."""
+    def imagen_a_jpg_temp(lugar):
+        ref = image_override_path(lugar.get("nombre", "")) or lugar.get("imagen", "")
         try:
-            if isinstance(ruta_o_url, str) and ruta_o_url.startswith("http"):
-                r = requests.get(ruta_o_url, timeout=15)
+            if isinstance(ref, str) and ref.startswith("http"):
+                r = requests.get(ref, timeout=15)
                 r.raise_for_status()
                 img_pil = Image.open(BytesIO(r.content))
             else:
-                img_pil = Image.open(ruta_o_url)
-
+                img_pil = Image.open(ref)
             img_pil = img_pil.convert("RGB")
             img_pil.thumbnail((1200, 1200))
-
             tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
             tmp_path = tmp.name
             tmp.close()
-
             img_pil.save(tmp_path, "JPEG", quality=88)
             return tmp_path
         except:
             return None
 
-    # ---------- PDF class with footer ---------- #
     class PDF(FPDF):
         def footer(self):
             self.set_y(-12)
@@ -441,64 +451,49 @@ def generar_pdf_lujo(itinerario):
     pdf = PDF("P", "mm", "A4")
     pdf.set_auto_page_break(auto=True, margin=14)
 
-    # ---------- PORTADA ---------- #
+    # Portada
     pdf.add_page()
-
-    # Fondo suave
     pdf.set_fill_color(248, 248, 248)
     pdf.rect(0, 0, 210, 297, style="F")
 
-    # Título
     pdf.set_text_color(25, 25, 25)
     pdf.set_font("Arial", "B", 30)
     pdf.ln(18)
-    pdf.cell(0, 12, limpiar_texto("Itinerario Turístico"), ln=True, align="C")
-
-    pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 10, limpiar_texto("Arica y Parinacota"), ln=True, align="C")
+    pdf.cell(0, 12, limpiar_texto(I18N[lang]["app_title"].replace("🌅 ", "")), ln=True, align="C")
 
     pdf.set_font("Arial", "", 12)
     pdf.set_text_color(90, 90, 90)
-    pdf.cell(0, 7, limpiar_texto("Guía personalizada con mapa y tiempos estimados"), ln=True, align="C")
+    pdf.cell(0, 7, limpiar_texto(I18N[lang]["app_subtitle"]), ln=True, align="C")
 
-    # Fecha
-    from datetime import datetime
     pdf.set_font("Arial", "I", 10)
-    pdf.cell(0, 7, limpiar_texto(f"Generado el {datetime.now().strftime('%d-%m-%Y')}"), ln=True, align="C")
+    pdf.cell(0, 7, limpiar_texto(f"{I18N[lang]['generated_on']} {datetime.datetime.now().strftime('%d-%m-%Y')}"), ln=True, align="C")
 
-    # Imagen hero (primer destino disponible)
     hero_img = None
     for _, lugares in itinerario.items():
         if lugares:
-            hero_img = imagen_a_jpg_temp(lugares[0].get("imagen"))
+            hero_img = imagen_a_jpg_temp(lugares[0])
             break
 
     if hero_img:
-        # Tarjeta blanca para imagen
+        x, y, w, h = 18, 80, 174, 135
         pdf.set_fill_color(255, 255, 255)
         pdf.set_draw_color(235, 235, 235)
-        pdf.rounded_rect = getattr(pdf, "rounded_rect", None)  # compat
-        # Marco simple
-        x, y, w, h = 18, 80, 174, 135
         pdf.rect(x, y, w, h, style="FD")
         try:
-            pdf.image(hero_img, x=x+6, y=y+6, w=w-12)
+            pdf.image(hero_img, x=x + 6, y=y + 6, w=w - 12)
         except:
             pass
 
-    # Banda inferior
     pdf.set_y(270)
     pdf.set_fill_color(30, 30, 30)
     pdf.rect(0, 270, 210, 27, style="F")
     pdf.set_text_color(255, 255, 255)
     pdf.set_font("Arial", "B", 11)
-    pdf.cell(0, 10, limpiar_texto("Naturaleza • Cultura • Aventura"), ln=True, align="C")
+    pdf.cell(0, 10, limpiar_texto(I18N[lang]["footer_tagline"]), ln=True, align="C")
 
-    # ---------- ITINERARIO POR DÍA ---------- #
+    # Itinerario
     for dia, lugares in itinerario.items():
         pdf.add_page()
-
-        # Header del día
         pdf.set_fill_color(30, 30, 30)
         pdf.rect(0, 0, 210, 22, style="F")
         pdf.set_text_color(255, 255, 255)
@@ -509,80 +504,60 @@ def generar_pdf_lujo(itinerario):
         pdf.ln(26)
         pdf.set_text_color(60, 60, 60)
         pdf.set_font("Arial", "", 11)
-        pdf.multi_cell(0, 6, limpiar_texto("Recomendación: sigue el orden propuesto para reducir traslados."))
-
+        pdf.multi_cell(0, 6, limpiar_texto(I18N[lang]["recommendation"]))
         pdf.ln(2)
 
-        # Cards de destinos
         for i, lugar in enumerate(lugares):
             region = lugar.get("region", "")
             color_hex = colores_region_local.get(region, "#FFFFFF")
             r, g, b = hex_to_rgb(color_hex)
 
-            # Medidas de tarjeta
-            card_x = 10
-            card_w = 190
-            card_h = 62  # altura base
+            card_x, card_w, card_h = 10, 190, 62
             start_y = pdf.get_y()
-
-            # Si no cabe, nueva página
             if start_y + card_h > 280:
                 pdf.add_page()
                 pdf.ln(8)
                 start_y = pdf.get_y()
 
-            # Fondo tarjeta
             pdf.set_draw_color(230, 230, 230)
             pdf.set_fill_color(255, 255, 255)
             pdf.rect(card_x, start_y, card_w, card_h, style="FD")
 
-            # Banda color región
             pdf.set_fill_color(r, g, b)
             pdf.rect(card_x, start_y, 6, card_h, style="F")
 
-            # Imagen a la izquierda
-            img_temp = imagen_a_jpg_temp(lugar.get("imagen"))
-            img_x = card_x + 10
-            img_y = start_y + 8
-            img_w = 52
-            img_h = 46
-
-            # Marco de imagen
+            img_temp = imagen_a_jpg_temp(lugar)
+            img_x, img_y, img_w, img_h = card_x + 10, start_y + 8, 52, 46
             pdf.set_draw_color(240, 240, 240)
             pdf.rect(img_x, img_y, img_w, img_h, style="D")
-
             if img_temp:
                 try:
                     pdf.image(img_temp, x=img_x, y=img_y, w=img_w, h=img_h)
                 except:
                     pass
 
-            # Texto a la derecha
             text_x = img_x + img_w + 10
             text_y = start_y + 8
             pdf.set_xy(text_x, text_y)
 
-            # Nombre
+            nombre = lugar.get("nombre", "")
+            tipo = tr_type(lugar.get("tipo", ""))
+            reg_tr = tr_region(region)
+            desc = tr_desc(nombre, lugar.get("descripcion", ""))
+
             pdf.set_text_color(25, 25, 25)
             pdf.set_font("Arial", "B", 13)
-            pdf.multi_cell(0, 6, limpiar_texto(lugar.get("nombre", "")))
+            pdf.multi_cell(0, 6, limpiar_texto(nombre))
 
-            # Meta info
             pdf.set_text_color(80, 80, 80)
             pdf.set_font("Arial", "", 10)
-            tipo = limpiar_texto(lugar.get("tipo", ""))
-            tiempo = limpiar_texto(lugar.get("tiempo", ""))
-            reg = limpiar_texto(region)
             pdf.set_x(text_x)
-            pdf.cell(0, 5, f"Tipo: {tipo}   |   Tiempo: {tiempo} hrs   |   Zona: {reg}", ln=True)
+            pdf.cell(0, 5, limpiar_texto(f"{tipo}  |  {lugar.get('tiempo','')} {I18N[lang]['hours']}  |  {reg_tr}"), ln=True)
 
-            # Descripción (2–3 líneas)
-            desc = limpiar_texto(lugar.get("descripcion", ""))
             pdf.set_x(text_x)
             pdf.set_font("Arial", "", 10)
-            pdf.multi_cell(0, 5, desc[:220])  # corta para que no se desborde
+            pdf.multi_cell(0, 5, limpiar_texto(desc[:220]))
 
-            # Distancia al siguiente (si aplica)
             if i < len(lugares) - 1:
                 try:
                     dist = geodesic(
@@ -592,46 +567,36 @@ def generar_pdf_lujo(itinerario):
                     pdf.set_x(text_x)
                     pdf.set_text_color(60, 60, 60)
                     pdf.set_font("Arial", "I", 9)
-                    pdf.cell(0, 5, limpiar_texto(f"Distancia al siguiente: {dist:.1f} km"), ln=True)
+                    pdf.cell(0, 5, limpiar_texto(f"{I18N[lang]['distance_next']}: {dist:.1f} km"), ln=True)
                 except:
                     pass
 
             pdf.ln(6)
 
-    # ---------- CIERRE ---------- #
+    # Cierre
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
     pdf.set_text_color(25, 25, 25)
     pdf.ln(20)
-    pdf.cell(0, 10, limpiar_texto("¡Buen viaje!"), ln=True, align="C")
+    pdf.cell(0, 10, limpiar_texto(I18N[lang]["good_trip"]), ln=True, align="C")
     pdf.set_font("Arial", "", 12)
     pdf.set_text_color(80, 80, 80)
-    pdf.multi_cell(
-        0, 7,
-        limpiar_texto("Este itinerario fue generado automáticamente en base a los destinos seleccionados y un criterio de cercanía."),
-        align="C"
-    )
-    pdf.ln(6)
-    pdf.set_font("Arial", "I", 10)
-    pdf.cell(0, 8, limpiar_texto("Arica y Parinacota • Turismo inteligente"), ln=True, align="C")
+    pdf.multi_cell(0, 7, limpiar_texto(I18N[lang]["auto_summary"]), align="C")
 
     filename = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
     pdf.output(filename)
     return filename
 
-# ---------- INTERFAZ ---------- #
-st.title(t("app_title"))
-st.markdown(t("app_subtitle"))
+# =========================
+# INTERFAZ
+# =========================
+# Sidebar: idioma + días + modo + divisas
 st.sidebar.header(t("sidebar_title"))
-
-# Idioma
 lang = st.sidebar.selectbox(t("language_label"), ["Español", "English", "Português"], index=0)
 st.session_state["lang"] = lang
 
-# Días
 dias = st.sidebar.slider(t("days_label"), 1, 14, 3)
 
-# Modo de traslado
 modo_viaje = st.sidebar.selectbox(
     t("travelmode_label"),
     ["driving", "walking", "transit", "bicycling"],
@@ -641,17 +606,17 @@ modo_viaje = st.sidebar.selectbox(
         "walking": t("travelmode_walking"),
         "transit": t("travelmode_transit"),
         "bicycling": t("travelmode_bicycling"),
-    }[x]
+    }[x],
 )
 
 st.sidebar.divider()
 st.sidebar.subheader(t("currency_title"))
 
 monto = st.sidebar.number_input(t("amount_label"), min_value=0.0, value=100.0, step=10.0)
-colA, colB = st.sidebar.columns(2)
-with colA:
+c1, c2 = st.sidebar.columns(2)
+with c1:
     moneda_origen = st.selectbox(t("from_label"), ["CLP", "USD", "EUR", "BRL", "ARS"], index=0)
-with colB:
+with c2:
     moneda_destino = st.selectbox(t("to_label"), ["CLP", "USD", "EUR", "BRL", "ARS"], index=1)
 
 if st.sidebar.button(t("convert_btn")):
@@ -670,12 +635,22 @@ if st.sidebar.button(t("convert_btn")):
     except Exception:
         st.sidebar.error(t("currency_error"))
 
+# Título principal
+st.title(t("app_title"))
+st.markdown(t("app_subtitle"))
 
+# Destinos por sección
 destinos_seleccionados = []
 
-# Mostrar destinos por secciones
 for seccion in ["Ciudad", "Costa", "Valle", "Altiplano"]:
-    st.subheader(f"{seccion}")
+    titulo = {
+        "Ciudad": t("section_city"),
+        "Costa": t("section_coast"),
+        "Valle": t("section_valley"),
+        "Altiplano": t("section_altiplano"),
+    }[seccion]
+    st.subheader(titulo)
+
     lugares_seccion = [d for d in destinos if d["region"] == seccion]
     cols_por_fila = 3
 
@@ -683,26 +658,23 @@ for seccion in ["Ciudad", "Costa", "Valle", "Altiplano"]:
         fila = st.columns(min(cols_por_fila, len(lugares_seccion) - i))
         for j, lugar in enumerate(lugares_seccion[i:i + cols_por_fila]):
             with fila[j]:
-                img_pil = cargar_imagen_para_ui(lugar["imagen"])
+                img_pil = cargar_imagen_para_ui(lugar)
                 if img_pil is not None:
                     st.image(img_pil, use_column_width=True)
-                else:
-                    st.warning(f"No se pudo cargar la imagen de {lugar['nombre']}")
-st.markdown(f"**{lugar['nombre']}** ({tr_type(lugar['tipo'])})")
-st.markdown(f"🕓 {lugar['tiempo']} {t('hours')}")
-st.markdown(tr_desc(lugar["nombre"], lugar["descripcion"]))
 
+                st.markdown(f"**{lugar['nombre']}** ({tr_type(lugar['tipo'])})")
+                st.markdown(f"🕓 {lugar['tiempo']} {t('hours')}")
+                st.markdown(tr_desc(lugar["nombre"], lugar["descripcion"]))
 
-                if st.checkbox("Añadir al itinerario", key=f"chk_{lugar['nombre']}"):
+                if st.checkbox(t("add_to_itinerary"), key=f"chk_{lugar['nombre']}"):
                     destinos_seleccionados.append(lugar)
 
-# Generar itinerario y mapa
+# Mapa + Itinerario + Google Maps + PDF
 if destinos_seleccionados:
     itinerario = generar_itinerario_por_cercania(destinos_seleccionados, dias)
 
-    st.subheader("🗺️ Mapa de tu ruta turística con recorrido")
+    st.subheader(t("map_title"))
     mapa = folium.Map(location=[-18.48, -70.32], zoom_start=9)
-
     colores_dia = ["blue", "red", "green", "orange", "purple", "darkred", "cadetblue"]
 
     for idx_dia, (dia, lugares) in enumerate(itinerario.items()):
@@ -713,7 +685,6 @@ if destinos_seleccionados:
                 popup=f"{lugar['nombre']} ({dia})",
                 icon=folium.Icon(color=colores_dia[idx_dia % len(colores_dia)])
             ).add_to(mapa)
-
             coords_dia.append((lugar["lat"], lugar["lon"]))
 
         if len(coords_dia) > 1:
@@ -727,28 +698,28 @@ if destinos_seleccionados:
 
     st_folium(mapa, width=700, height=450)
 
-    # ---- GOOGLE MAPS PRECISO ----
-    ruta_url = generar_link_google_maps_desde_itinerario(
-        itinerario,
-        travelmode=modo_viaje
-    )
+    st.subheader(t("itinerary_title"))
+    for dia, lugares in itinerario.items():
+        st.markdown(f"### {dia}")
+        for lugar in lugares:
+            st.markdown(f"**{lugar['nombre']}** ({tr_type(lugar['tipo'])})")
+            st.markdown(f"🕓 {lugar['tiempo']} {t('hours')}")
+            st.markdown(tr_desc(lugar["nombre"], lugar["descripcion"]))
+        st.divider()
 
+    ruta_url = generar_link_google_maps_desde_itinerario(itinerario, travelmode=modo_viaje)
     if ruta_url:
-        st.markdown(
-            f"🧭 [Abrir ruta detallada en Google Maps]({ruta_url})",
-            unsafe_allow_html=True
-        )
+        st.markdown(f"🧭 [{t('open_gmaps')}]({ruta_url})", unsafe_allow_html=True)
 
-    # ---- PDF ----
-    if st.button("📄 Generar PDF de Lujo"):
-        pdf_path = generar_pdf_lujo(itinerario)
+    if st.button(t("generate_pdf")):
+        pdf_path = generar_pdf_lujo(itinerario, lang=st.session_state["lang"])
         with open(pdf_path, "rb") as f:
             st.download_button(
-                "Descargar PDF Turístico Profesional",
+                t("download_pdf"),
                 f,
                 file_name="Itinerario_Turistico_Arica_Lujo.pdf"
             )
 else:
-    st.info("Selecciona al menos un atractivo turístico para generar tu itinerario.")
+    st.info(t("select_at_least_one"))
 
 
