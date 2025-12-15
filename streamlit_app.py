@@ -239,12 +239,38 @@ def tr_desc(nombre: str, descripcion_original: str) -> str:
 # DIVISAS (Frankfurter)
 # =========================
 @st.cache_data(ttl=60 * 60)
-def obtener_tasa_frankfurter(moneda_origen: str, moneda_destino: str) -> float:
-    url = f"https://api.frankfurter.dev/v1/latest?amount=1&from={moneda_origen}&to={moneda_destino}"
+def erapi_rates(base: str) -> dict:
+    """
+    Open Access ExchangeRate-API (sin key).
+    Docs: https://open.er-api.com/v6/latest/USD (cambia USD por la base).  :contentReference[oaicite:2]{index=2}
+    """
+    url = f"https://open.er-api.com/v6/latest/{base}"
     r = requests.get(url, timeout=15)
     r.raise_for_status()
     data = r.json()
-    return float(data["rates"][moneda_destino])
+    if data.get("result") != "success":
+        raise ValueError(f"ER-API error: {data.get('error-type', 'unknown')}")
+    return data["rates"]  # dict: { "USD":1, "CLP":..., "ARS":..., ... }
+
+def convertir_divisa(monto: float, moneda_origen: str, moneda_destino: str) -> tuple[float, str]:
+    if moneda_origen == moneda_destino:
+        return monto, f"1 {moneda_origen} = 1 {moneda_destino}"
+
+    rates = erapi_rates(moneda_origen)
+    if moneda_destino not in rates:
+        raise ValueError(f"Moneda destino no soportada: {moneda_destino}")
+
+    tasa = float(rates[moneda_destino])  # 1 ORIGEN = tasa DESTINO
+    convertido = monto * tasa
+    detalle = f"1 {moneda_origen} = {tasa:.6f} {moneda_destino} (open.er-api.com)"
+    return convertido, detalle
+
+@st.cache_data(ttl=60 * 60)
+def monedas_disponibles() -> list[str]:
+    # usamos USD solo para obtener el set completo de monedas soportadas por el endpoint
+    rates = erapi_rates("USD")
+    codigos = sorted(rates.keys())
+    return codigos
 
 # =========================
 # IMÁGENES (URL o local)
