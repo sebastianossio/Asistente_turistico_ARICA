@@ -34,6 +34,17 @@ I18N = {
         "travelmode_walking": "Caminando",
         "travelmode_transit": "Transporte público",
         "travelmode_bicycling": "Bicicleta",
+        "weather_title": "🌤️ Clima en la región",
+"weather_city": "Arica (Ciudad)",
+"weather_valley": "Azapa (Valle)",
+"weather_altiplano": "Putre (Altiplano)",
+"weather_now": "Ahora",
+"weather_next7": "Próximos 7 días",
+"weather_temp": "Temperatura",
+"weather_wind": "Viento",
+"weather_precip": "Precipitación",
+"weather_source": "Fuente: Open-Meteo (CC-BY 4.0)",
+
 
         "currency_title": "💱 Conversor de divisas",
         "amount_label": "Monto",
@@ -66,6 +77,17 @@ I18N = {
         "auto_summary": "Este itinerario fue generado automáticamente en base a los destinos seleccionados y un criterio de cercanía.",
     },
     "English": {
+        "weather_title": "🌤️ Regional weather",
+"weather_city": "Arica (City)",
+"weather_valley": "Azapa (Valley)",
+"weather_altiplano": "Putre (Highlands)",
+"weather_now": "Now",
+"weather_next7": "Next 7 days",
+"weather_temp": "Temperature",
+"weather_wind": "Wind",
+"weather_precip": "Precipitation",
+"weather_source": "Source: Open-Meteo (CC-BY 4.0)",
+
         "app_title": "🌅 Tourist Guide - Arica & Parinacota",
         "app_subtitle": "Explore the region with personalized itineraries by area.",
         "sidebar_title": "🧭 Trip settings",
@@ -108,6 +130,17 @@ I18N = {
         "auto_summary": "This itinerary was generated automatically based on your selected places and a proximity rule.",
     },
     "Português": {
+        "weather_title": "🌤️ Clima na região",
+"weather_city": "Arica (Cidade)",
+"weather_valley": "Azapa (Vale)",
+"weather_altiplano": "Putre (Altiplano)",
+"weather_now": "Agora",
+"weather_next7": "Próximos 7 dias",
+"weather_temp": "Temperatura",
+"weather_wind": "Vento",
+"weather_precip": "Precipitação",
+"weather_source": "Fonte: Open-Meteo (CC-BY 4.0)",
+
         "app_title": "🌅 Guia Turístico - Arica e Parinacota",
         "app_subtitle": "Explore a região com roteiros personalizados por área.",
         "sidebar_title": "🧭 Configurar viagem",
@@ -372,6 +405,38 @@ destinos = [
 # =========================
 # FUNCIONES: Itinerario + Google Maps
 # =========================
+@st.cache_data(ttl=30 * 60)  # cache 30 min
+def obtener_clima_openmeteo(lat: float, lon: float, tz: str = "America/Santiago") -> dict:
+    # Docs: /v1/forecast con current_weather y daily :contentReference[oaicite:2]{index=2}
+    url = (
+        "https://api.open-meteo.com/v1/forecast"
+        f"?latitude={lat}&longitude={lon}"
+        f"&current_weather=true"
+        f"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max"
+        f"&timezone={tz}"
+    )
+    r = requests.get(url, timeout=15)
+    r.raise_for_status()
+    return r.json()
+
+def formatear_pronostico_7d(data: dict):
+    d = data.get("daily", {})
+    fechas = d.get("time", [])
+    tmax = d.get("temperature_2m_max", [])
+    tmin = d.get("temperature_2m_min", [])
+    prcp = d.get("precipitation_sum", [])
+    wind = d.get("windspeed_10m_max", [])
+    filas = []
+    for i in range(len(fechas)):
+        filas.append({
+            "Fecha": fechas[i],
+            "T° max (°C)": tmax[i] if i < len(tmax) else None,
+            "T° min (°C)": tmin[i] if i < len(tmin) else None,
+            "Precip (mm)": prcp[i] if i < len(prcp) else None,
+            "Viento máx (km/h)": wind[i] if i < len(wind) else None,
+        })
+    return filas
+
 def calcular_distancia(d1, d2):
     return geodesic((d1["lat"], d1["lon"]), (d2["lat"], d2["lon"])).km
 
@@ -756,5 +821,33 @@ if destinos_seleccionados:
             )
 else:
     st.info(t("select_at_least_one"))
+st.subheader(t("weather_title"))
+
+PUNTOS_CLIMA = [
+    (t("weather_city"), -18.4783, -70.3126),
+    (t("weather_valley"), -18.5169, -70.1823),
+    (t("weather_altiplano"), -18.1950, -69.5590),
+]
+
+tabs = st.tabs([p[0] for p in PUNTOS_CLIMA])
+
+for tab, (nombre, lat, lon) in zip(tabs, PUNTOS_CLIMA):
+    with tab:
+        try:
+            data = obtener_clima_openmeteo(lat, lon)
+            cw = data.get("current_weather", {})
+
+            c1, c2, c3 = st.columns(3)
+            c1.metric(t("weather_temp"), f"{cw.get('temperature', '—')} °C")
+            c2.metric(t("weather_wind"), f"{cw.get('windspeed', '—')} km/h")
+            c3.metric(t("weather_now"), f"{cw.get('time', '—')}")
+
+            st.markdown(f"**{t('weather_next7')}**")
+            filas = formatear_pronostico_7d(data)
+            st.dataframe(filas, use_container_width=True)
+
+            st.caption(t("weather_source"))
+        except Exception as e:
+            st.warning(f"No se pudo cargar el clima para {nombre}. Detalle: {e}")
 
 
