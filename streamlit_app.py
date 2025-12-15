@@ -12,6 +12,8 @@ from PIL import Image
 from io import BytesIO
 import tempfile
 import re
+import datetime
+
 
 # ---------- CONFIGURACIÓN ---------- #
 st.set_page_config(page_title="App Turística - Arica y Parinacota", layout="wide")
@@ -109,6 +111,18 @@ destinos = [
 
 
 # ---------- FUNCIONES ---------- #
+@st.cache_data(ttl=60 * 60)  # cache 1 hora
+def obtener_tasa_frankfurter(moneda_origen: str, moneda_destino: str) -> float:
+    """
+    Devuelve la tasa de cambio moneda_origen -> moneda_destino usando Frankfurter.
+    Frankfurter usa base EUR por defecto, por eso pedimos amount=1&from=XXX&to=YYY.
+    """
+    url = f"https://api.frankfurter.dev/v1/latest?amount=1&from={moneda_origen}&to={moneda_destino}"
+    r = requests.get(url, timeout=15)
+    r.raise_for_status()
+    data = r.json()
+    return float(data["rates"][moneda_destino])
+
 def calcular_distancia(d1, d2):
     return geodesic((d1["lat"], d1["lon"]), (d2["lat"], d2["lon"])).km
 
@@ -409,12 +423,89 @@ st.title("🌅 Guía Turística - Arica y Parinacota")
 st.markdown("Explora la región con itinerarios personalizados por secciones geográficas.")
 
 st.sidebar.header("🧭 Configura tu viaje")
-dias = st.sidebar.slider("Días de visita", 1, 7, 3)
-modo_viaje = st.sidebar.selectbox(
-    "🚗 Modo de traslado",
-    ["driving", "walking", "transit", "bicycling"],
+
+# --- Idioma ---
+idioma = st.sidebar.selectbox(
+    "🌐 Idioma",
+    ["Español", "English", "Português"],
     index=0
 )
+
+# Mini diccionario para títulos (puedes ampliar después)
+T = {
+    "Español": {
+        "dias": "¿Cuántos días te quedarás en la región?",
+        "divisas": "💱 Conversor de divisas",
+        "monto": "Monto",
+        "de": "De",
+        "a": "A",
+        "convertir": "Convertir",
+        "resultado": "Resultado",
+        "error_divisa": "No se pudo obtener la tasa. Intenta de nuevo."
+    },
+    "English": {
+        "dias": "How many days will you stay in the region?",
+        "divisas": "💱 Currency converter",
+        "monto": "Amount",
+        "de": "From",
+        "a": "To",
+        "convertir": "Convert",
+        "resultado": "Result",
+        "error_divisa": "Could not fetch the rate. Try again."
+    },
+    "Português": {
+        "dias": "Quantos dias você ficará na região?",
+        "divisas": "💱 Conversor de moedas",
+        "monto": "Valor",
+        "de": "De",
+        "a": "Para",
+        "convertir": "Converter",
+        "resultado": "Resultado",
+        "error_divisa": "Não foi possível obter a taxa. Tente novamente."
+    }
+}
+
+# --- Días (al lado del idioma, mismo sidebar) ---
+dias = st.sidebar.slider(T[idioma]["dias"], 1, 14, 3)
+
+st.sidebar.divider()
+
+# --- Conversor de divisas ---
+st.sidebar.subheader(T[idioma]["divisas"])
+
+monto = st.sidebar.number_input(T[idioma]["monto"], min_value=0.0, value=100.0, step=10.0)
+
+colA, colB = st.sidebar.columns(2)
+
+with colA:
+    moneda_origen = st.selectbox(
+        T[idioma]["de"],
+        ["CLP", "USD", "EUR", "BRL", "ARS"],
+        index=0
+    )
+
+with colB:
+    moneda_destino = st.selectbox(
+        T[idioma]["a"],
+        ["CLP", "USD", "EUR", "BRL", "ARS"],
+        index=1 if moneda_origen != "USD" else 0
+    )
+
+if st.sidebar.button(T[idioma]["convertir"]):
+    try:
+        if moneda_origen == moneda_destino:
+            convertido = monto
+            tasa = 1.0
+        else:
+            tasa = obtener_tasa_frankfurter(moneda_origen, moneda_destino)
+            convertido = monto * tasa
+
+        st.sidebar.success(
+            f"{T[idioma]['resultado']}: {monto:,.2f} {moneda_origen} → {convertido:,.2f} {moneda_destino}\n"
+            f"Tasa: 1 {moneda_origen} = {tasa:.6f} {moneda_destino}"
+        )
+    except Exception:
+        st.sidebar.error(T[idioma]["error_divisa"])
 
 destinos_seleccionados = []
 
