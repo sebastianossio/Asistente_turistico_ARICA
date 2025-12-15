@@ -14,6 +14,207 @@ import tempfile
 import re
 import datetime
 
+# ---------- i18n (TRADUCCIÓN TOTAL DE LA APP) ---------- #
+I18N = {
+    "Español": {
+        "app_title": "🌅 Guía Turística - Arica y Parinacota",
+        "app_subtitle": "Explora la región con itinerarios personalizados por secciones geográficas.",
+        "sidebar_title": "🧭 Configura tu viaje",
+        "days_label": "¿Cuántos días te quedarás en la región?",
+        "language_label": "🌐 Idioma",
+        "travelmode_label": "🚗 Modo de traslado",
+        "travelmode_driving": "Auto",
+        "travelmode_walking": "Caminando",
+        "travelmode_transit": "Transporte público",
+        "travelmode_bicycling": "Bicicleta",
+
+        "currency_title": "💱 Conversor de divisas",
+        "amount_label": "Monto",
+        "from_label": "De",
+        "to_label": "A",
+        "convert_btn": "Convertir",
+        "result_label": "Resultado",
+        "rate_label": "Tasa",
+        "currency_error": "No se pudo obtener la tasa. Intenta de nuevo.",
+
+        "section_city": "Ciudad",
+        "section_coast": "Costa",
+        "section_valley": "Valle",
+        "section_altiplano": "Altiplano",
+
+        "add_to_itinerary": "Añadir al itinerario",
+        "map_title": "🗺️ Mapa de tu ruta turística con recorrido",
+        "itinerary_title": "🗓️ Itinerario sugerido",
+        "open_gmaps": "🧭 Abrir ruta detallada en Google Maps",
+        "generate_pdf": "📄 Generar PDF",
+        "download_pdf": "Descargar PDF Turístico",
+        "select_at_least_one": "Selecciona al menos un atractivo turístico para generar tu itinerario.",
+
+        "hours": "hrs",
+    },
+
+    "English": {
+        "app_title": "🌅 Tourist Guide - Arica & Parinacota",
+        "app_subtitle": "Explore the region with personalized itineraries by area.",
+        "sidebar_title": "🧭 Trip settings",
+        "days_label": "How many days will you stay in the region?",
+        "language_label": "🌐 Language",
+        "travelmode_label": "🚗 Travel mode",
+        "travelmode_driving": "Driving",
+        "travelmode_walking": "Walking",
+        "travelmode_transit": "Public transit",
+        "travelmode_bicycling": "Bicycling",
+
+        "currency_title": "💱 Currency converter",
+        "amount_label": "Amount",
+        "from_label": "From",
+        "to_label": "To",
+        "convert_btn": "Convert",
+        "result_label": "Result",
+        "rate_label": "Rate",
+        "currency_error": "Could not fetch the rate. Try again.",
+
+        "section_city": "City",
+        "section_coast": "Coast",
+        "section_valley": "Valley",
+        "section_altiplano": "Highlands",
+
+        "add_to_itinerary": "Add to itinerary",
+        "map_title": "🗺️ Route map",
+        "itinerary_title": "🗓️ Suggested itinerary",
+        "open_gmaps": "🧭 Open detailed route in Google Maps",
+        "generate_pdf": "📄 Generate PDF",
+        "download_pdf": "Download Tourist PDF",
+        "select_at_least_one": "Select at least one place to generate your itinerary.",
+
+        "hours": "hrs",
+    },
+
+    "Português": {
+        "app_title": "🌅 Guia Turístico - Arica e Parinacota",
+        "app_subtitle": "Explore a região com roteiros personalizados por área.",
+        "sidebar_title": "🧭 Configurar viagem",
+        "days_label": "Quantos dias você ficará na região?",
+        "language_label": "🌐 Idioma",
+        "travelmode_label": "🚗 Modo de deslocamento",
+        "travelmode_driving": "Carro",
+        "travelmode_walking": "A pé",
+        "travelmode_transit": "Transporte público",
+        "travelmode_bicycling": "Bicicleta",
+
+        "currency_title": "💱 Conversor de moedas",
+        "amount_label": "Valor",
+        "from_label": "De",
+        "to_label": "Para",
+        "convert_btn": "Converter",
+        "result_label": "Resultado",
+        "rate_label": "Taxa",
+        "currency_error": "Não foi possível obter a taxa. Tente novamente.",
+
+        "section_city": "Cidade",
+        "section_coast": "Costa",
+        "section_valley": "Vale",
+        "section_altiplano": "Altiplano",
+
+        "add_to_itinerary": "Adicionar ao roteiro",
+        "map_title": "🗺️ Mapa da rota",
+        "itinerary_title": "🗓️ Roteiro sugerido",
+        "open_gmaps": "🧭 Abrir rota detalhada no Google Maps",
+        "generate_pdf": "📄 Gerar PDF",
+        "download_pdf": "Baixar PDF Turístico",
+        "select_at_least_one": "Selecione pelo menos um lugar para gerar o roteiro.",
+
+        "hours": "hrs",
+    },
+}
+
+def t(key: str) -> str:
+    lang = st.session_state.get("lang", "Español")
+    return I18N.get(lang, I18N["Español"]).get(key, key)
+
+# Traducción de etiquetas (sin tocar tu lista destinos)
+REGION_MAP = {
+    "Español": {"Ciudad":"Ciudad","Costa":"Costa","Valle":"Valle","Altiplano":"Altiplano"},
+    "English": {"Ciudad":"City","Costa":"Coast","Valle":"Valley","Altiplano":"Highlands"},
+    "Português": {"Ciudad":"Cidade","Costa":"Costa","Valle":"Vale","Altiplano":"Altiplano"},
+}
+TYPE_MAP = {
+    "Español": {"Cultura":"Cultura","Playa":"Playa","Naturaleza":"Naturaleza"},
+    "English": {"Cultura":"Culture","Playa":"Beach","Naturaleza":"Nature"},
+    "Português": {"Cultura":"Cultura","Playa":"Praia","Naturaleza":"Natureza"},
+}
+
+def tr_region(valor: str) -> str:
+    lang = st.session_state.get("lang", "Español")
+    return REGION_MAP.get(lang, REGION_MAP["Español"]).get(valor, valor)
+
+def tr_type(valor: str) -> str:
+    lang = st.session_state.get("lang", "Español")
+    return TYPE_MAP.get(lang, TYPE_MAP["Español"]).get(valor, valor)
+
+# ---------- TRADUCCIÓN DE DESCRIPCIONES (por nombre de destino) ---------- #
+# Clave: nombre EXACTO del destino (tal como está en tu lista destinos)
+DESC_I18N = {
+    "Morro de Arica": {
+        "English": "Historic landmark with panoramic views of the city and coastline.",
+        "Português": "Marco histórico com vista panorâmica da cidade e do litoral."
+    },
+    "Cuevas de Anzota": {
+        "English": "Coastal caves and rock formations along a scenic seaside trail.",
+        "Português": "Grutas costeiras e formações rochosas em uma trilha cênica à beira-mar."
+    },
+    "Museo de Azapa": {
+        "English": "Archaeological museum featuring Chinchorro heritage and ancient artifacts.",
+        "Português": "Museu arqueológico com patrimônio Chinchorro e artefatos antigos."
+    },
+    "Valle de Lluta": {
+        "English": "Traditional agricultural valley with rural scenery and local culture.",
+        "Português": "Vale agrícola tradicional com paisagens rurais e cultura local."
+    },
+    "Valle de Azapa": {
+        "English": "Cultural and agricultural valley known for local products and heritage.",
+        "Português": "Vale cultural e agrícola conhecido por produtos locais e patrimônio."
+    },
+    "Catedral de San Marcos": {
+        "English": "Historic cathedral in the city center, a key landmark in Arica.",
+        "Português": "Catedral histórica no centro da cidade, um marco importante de Arica."
+    },
+    "Playa El Laucho": {
+        "English": "Calm beach near the city—great for relaxing and swimming.",
+        "Português": "Praia tranquila perto da cidade—ideal para relaxar e nadar."
+    },
+    "Playa La Lisera": {
+        "English": "Popular beach close to downtown, ideal for a beach day.",
+        "Português": "Praia popular perto do centro, ideal para passar o dia."
+    },
+    "Humedal del Río Lluta": {
+        "English": "Coastal wetland ideal for birdwatching and nature observation.",
+        "Português": "Área úmida costeira ideal para observação de aves e natureza."
+    },
+    "La Ex Aduana": {
+        "English": "Historic customs building and landmark near the waterfront area.",
+        "Português": "Antiga alfândega histórica e ponto turístico perto da orla."
+    },
+    "Putre": {
+        "English": "Andean town with Aymara culture, high-altitude landscapes and tradition.",
+        "Português": "Cidade andina com cultura Aymara, paisagens de altitude e tradição."
+    },
+    "Parque Nacional Lauca": {
+        "English": "National park with volcanoes, lagoons and unique highland wildlife.",
+        "Português": "Parque nacional com vulcões, lagoas e fauna típica do altiplano."
+    },
+    "Salar de Surire": {
+        "English": "Highland salt flat known for wildlife and striking landscapes.",
+        "Português": "Salar do altiplano conhecido pela fauna e paisagens impressionantes."
+    }
+}
+
+def tr_desc(nombre: str, descripcion_original: str) -> str:
+    lang = st.session_state.get("lang", "Español")
+    if lang == "Español":
+        return descripcion_original
+    return DESC_I18N.get(nombre, {}).get(lang, descripcion_original)
+
 
 # ---------- CONFIGURACIÓN ---------- #
 st.set_page_config(page_title="App Turística - Arica y Parinacota", layout="wide")
@@ -419,93 +620,56 @@ def generar_pdf_lujo(itinerario):
     return filename
 
 # ---------- INTERFAZ ---------- #
-st.title("🌅 Guía Turística - Arica y Parinacota")
-st.markdown("Explora la región con itinerarios personalizados por secciones geográficas.")
+st.title(t("app_title"))
+st.markdown(t("app_subtitle"))
+st.sidebar.header(t("sidebar_title"))
 
-st.sidebar.header("🧭 Configura tu viaje")
+# Idioma
+lang = st.sidebar.selectbox(t("language_label"), ["Español", "English", "Português"], index=0)
+st.session_state["lang"] = lang
 
-# --- Idioma ---
-idioma = st.sidebar.selectbox(
-    "🌐 Idioma",
-    ["Español", "English", "Português"],
-    index=0
+# Días
+dias = st.sidebar.slider(t("days_label"), 1, 14, 3)
+
+# Modo de traslado
+modo_viaje = st.sidebar.selectbox(
+    t("travelmode_label"),
+    ["driving", "walking", "transit", "bicycling"],
+    index=0,
+    format_func=lambda x: {
+        "driving": t("travelmode_driving"),
+        "walking": t("travelmode_walking"),
+        "transit": t("travelmode_transit"),
+        "bicycling": t("travelmode_bicycling"),
+    }[x]
 )
 
-# Mini diccionario para títulos (puedes ampliar después)
-T = {
-    "Español": {
-        "dias": "¿Cuántos días te quedarás en la región?",
-        "divisas": "💱 Conversor de divisas",
-        "monto": "Monto",
-        "de": "De",
-        "a": "A",
-        "convertir": "Convertir",
-        "resultado": "Resultado",
-        "error_divisa": "No se pudo obtener la tasa. Intenta de nuevo."
-    },
-    "English": {
-        "dias": "How many days will you stay in the region?",
-        "divisas": "💱 Currency converter",
-        "monto": "Amount",
-        "de": "From",
-        "a": "To",
-        "convertir": "Convert",
-        "resultado": "Result",
-        "error_divisa": "Could not fetch the rate. Try again."
-    },
-    "Português": {
-        "dias": "Quantos dias você ficará na região?",
-        "divisas": "💱 Conversor de moedas",
-        "monto": "Valor",
-        "de": "De",
-        "a": "Para",
-        "convertir": "Converter",
-        "resultado": "Resultado",
-        "error_divisa": "Não foi possível obter a taxa. Tente novamente."
-    }
-}
-
-# --- Días (al lado del idioma, mismo sidebar) ---
-dias = st.sidebar.slider(T[idioma]["dias"], 1, 14, 3)
-
 st.sidebar.divider()
+st.sidebar.subheader(t("currency_title"))
 
-# --- Conversor de divisas ---
-st.sidebar.subheader(T[idioma]["divisas"])
-
-monto = st.sidebar.number_input(T[idioma]["monto"], min_value=0.0, value=100.0, step=10.0)
-
+monto = st.sidebar.number_input(t("amount_label"), min_value=0.0, value=100.0, step=10.0)
 colA, colB = st.sidebar.columns(2)
-
 with colA:
-    moneda_origen = st.selectbox(
-        T[idioma]["de"],
-        ["CLP", "USD", "EUR", "BRL", "ARS"],
-        index=0
-    )
-
+    moneda_origen = st.selectbox(t("from_label"), ["CLP", "USD", "EUR", "BRL", "ARS"], index=0)
 with colB:
-    moneda_destino = st.selectbox(
-        T[idioma]["a"],
-        ["CLP", "USD", "EUR", "BRL", "ARS"],
-        index=1 if moneda_origen != "USD" else 0
-    )
+    moneda_destino = st.selectbox(t("to_label"), ["CLP", "USD", "EUR", "BRL", "ARS"], index=1)
 
-if st.sidebar.button(T[idioma]["convertir"]):
+if st.sidebar.button(t("convert_btn")):
     try:
         if moneda_origen == moneda_destino:
-            convertido = monto
             tasa = 1.0
+            convertido = monto
         else:
             tasa = obtener_tasa_frankfurter(moneda_origen, moneda_destino)
             convertido = monto * tasa
 
         st.sidebar.success(
-            f"{T[idioma]['resultado']}: {monto:,.2f} {moneda_origen} → {convertido:,.2f} {moneda_destino}\n"
-            f"Tasa: 1 {moneda_origen} = {tasa:.6f} {moneda_destino}"
+            f"{t('result_label')}: {monto:,.2f} {moneda_origen} → {convertido:,.2f} {moneda_destino}\n"
+            f"{t('rate_label')}: 1 {moneda_origen} = {tasa:.6f} {moneda_destino}"
         )
     except Exception:
-        st.sidebar.error(T[idioma]["error_divisa"])
+        st.sidebar.error(t("currency_error"))
+
 
 destinos_seleccionados = []
 
@@ -524,10 +688,10 @@ for seccion in ["Ciudad", "Costa", "Valle", "Altiplano"]:
                     st.image(img_pil, use_column_width=True)
                 else:
                     st.warning(f"No se pudo cargar la imagen de {lugar['nombre']}")
+st.markdown(f"**{lugar['nombre']}** ({tr_type(lugar['tipo'])})")
+st.markdown(f"🕓 {lugar['tiempo']} {t('hours')}")
+st.markdown(tr_desc(lugar["nombre"], lugar["descripcion"]))
 
-                st.markdown(f"**{lugar['nombre']}** ({lugar['tipo']})")
-                st.markdown(f"🕓 {lugar['tiempo']} hrs")
-                st.markdown(f"📖 {lugar['descripcion']}")
 
                 if st.checkbox("Añadir al itinerario", key=f"chk_{lugar['nombre']}"):
                     destinos_seleccionados.append(lugar)
