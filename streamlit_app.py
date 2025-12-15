@@ -335,7 +335,6 @@ destinos = [
      "imagen": img("Salar de Surire.jpg")},
 ]
 
-]
 
 # =========================
 # FUNCIONES: Itinerario + Google Maps
