@@ -284,61 +284,57 @@ def cargar_imagen_para_ui(lugar: dict):
 destinos = [
     {"nombre": "Morro de Arica", "lat": -18.47962, "lon": -70.32394, "tipo": "Cultura", "tiempo": 1.5,
      "region": "Ciudad", "descripcion": "Icono histórico con vista panorámica de la ciudad.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Morro_de_Arica.jpg"},
+     "imagen": img("morro-de-arica-1.jpg")},
 
     {"nombre": "Playa El Laucho", "lat": -18.488000, "lon": -70.327320, "tipo": "Playa", "tiempo": 2,
      "region": "Costa", "descripcion": "Playa tranquila ideal para relajarse y tomar sol.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Playa_El_Laucho_Arica.jpg"},
+     "imagen": img("Playa_El_Laucho.jpg")},
 
     {"nombre": "Playa La Lisera", "lat": -18.49303, "lon": -70.32565, "tipo": "Playa", "tiempo": 2,
      "region": "Costa", "descripcion": "Playa muy visitada, ideal para baño y descanso cerca del centro.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Playa_La_Lisera_Arica.jpg"},
+     "imagen": img("Playa-La-Lisera-Arica.jpg")},
 
     {"nombre": "Cuevas de Anzota", "lat": -18.549914, "lon": -70.331249, "tipo": "Naturaleza", "tiempo": 1.5,
      "region": "Costa", "descripcion": "Cuevas naturales con formaciones rocosas únicas.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/5/58/Cuevas_de_Anzota.jpg"},
-
-    {"nombre": "Playa Chinchorro", "lat": -18.466, "lon": -70.307, "tipo": "Playa", "tiempo": 2.5,
-     "region": "Costa", "descripcion": "Famosa playa con actividades de pesca y deportes acuáticos.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Playa_Chinchorro_Arica.jpg"},
+     "imagen": img("Cuevas de Anzota.jpg")},
 
     {"nombre": "Humedal del Río Lluta", "lat": -18.425, "lon": -70.324, "tipo": "Naturaleza", "tiempo": 2,
      "region": "Costa", "descripcion": "Ecosistema protegido, ideal para observación de aves.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Humedal_del_Rio_Lluta_Arica.jpg"},
+     "imagen": img("Humedal_Rio_Lluta.jpg")},
 
     {"nombre": "Museo de Azapa", "lat": -18.516474, "lon": -70.181149, "tipo": "Cultura", "tiempo": 1.5,
      "region": "Valle", "descripcion": "Museo arqueológico con momias y cultura Chinchorro.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/74/Museo_Arqueologico_San_Miguel_de_Azapa.JPG"},
+     "imagen": img("Museo arqueologico San Miguel de Azapa.jpg")},
 
-    {"nombre": "Valle de Lluta", "lat": -18.43, "lon": -70.32, "tipo": "Naturaleza", "tiempo": 2,
+    {"nombre": "Valle de Lluta", "lat": -18.40130, "lon": -70.30010, "tipo": "Naturaleza", "tiempo": 2,
      "region": "Valle", "descripcion": "Hermoso valle con agricultura tradicional y paisajes naturales.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/1/12/Valle_de_Lluta.jpg"},
+     "imagen": img("Valle de lluta.jpg")},
 
     {"nombre": "Valle de Azapa", "lat": -18.51690, "lon": -70.18230, "tipo": "Naturaleza", "tiempo": 2,
      "region": "Valle", "descripcion": "Valle destacado por su agricultura y patrimonio cultural.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Valle_de_Azapa.jpg"},
+     "imagen": img("Valle de Azapa.jpeg")},
 
     {"nombre": "Catedral de San Marcos", "lat": -18.47897, "lon": -70.32072, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Imponente catedral del centro de Arica, arquitectura neoclásica.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/0/02/Catedral_de_San_Marcos_Arica.jpg"},
+     "imagen": img("Catedral de San Marcos.jpeg")},
 
     {"nombre": "La Ex Aduana", "lat": -18.477185, "lon": -70.321130, "tipo": "Cultura", "tiempo": 1,
      "region": "Ciudad", "descripcion": "Edificio histórico que albergó la aduana de la ciudad.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ex_Aduana_Arica.jpg"},
+     "imagen": img("Ex Aduana.jpg")},
 
     {"nombre": "Putre", "lat": -18.195, "lon": -69.559, "tipo": "Cultura", "tiempo": 3,
      "region": "Altiplano", "descripcion": "Pueblo tradicional a orillas del altiplano con cultura Aymara.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Putre_village.jpg"},
+     "imagen": img("Putre.jpg")},
 
     {"nombre": "Parque Nacional Lauca", "lat": -18.243, "lon": -69.352, "tipo": "Naturaleza", "tiempo": 4,
      "region": "Altiplano", "descripcion": "Parque con volcanes, lagunas y fauna típica de la zona.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Parque_Nacional_Lauca_Chile.jpg"},
-
-    # Lago Chungará eliminado (como pediste antes)
+     "imagen": img("Parque Nacional Lauca.jpg")},
 
     {"nombre": "Salar de Surire", "lat": -18.85, "lon": -69.05, "tipo": "Naturaleza", "tiempo": 3.5,
      "region": "Altiplano", "descripcion": "Salar impresionante con fauna típica del altiplano.",
-     "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/74/Salar_de_Surire.jpg"},
+     "imagen": img("Salar de Surire.jpg")},
+]
+
 ]
 
 # =========================
