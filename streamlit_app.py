@@ -280,7 +280,14 @@ def cargar_imagen_para_ui(lugar: dict):
 # =========================
 # DATOS (DESTINOS)
 # =========================
-# Nota: Mantengo tu estructura y campo 'imagen'. (Solo actualicé coordenadas que ya venías corrigiendo contigo.)
+
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+IMAGES_DIR = BASE_DIR / "images"
+
+def img(nombre_archivo):
+    return str(IMAGES_DIR / nombre_archivo)
 destinos = [
     {"nombre": "Morro de Arica", "lat": -18.47962, "lon": -70.32394, "tipo": "Cultura", "tiempo": 1.5,
      "region": "Ciudad", "descripcion": "Icono histórico con vista panorámica de la ciudad.",
